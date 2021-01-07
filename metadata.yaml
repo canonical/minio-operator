@@ -5,7 +5,10 @@ description: |
   MinIO's high-performance object storage suite is software defined and
   enables customers to build cloud-native data infrastructure for
   machine learning, analytics and application data workloads.
-maintainers: [Kenneth Koski <kenneth.koski@canonical.com>]
+maintainers:
+  - "Eduardo Sousa <eduardo.sousa@canonical.com>"
+  - "Kenneth Koski <kenneth.koski@canonical.com>"
+  - "Kevin Monroe <kevin.monroe@canonical.com>"
 tags: [file-servers, storage]
 series: [kubernetes]
 resources:
