@@ -75,8 +75,13 @@ def start_charm():
                         "username": image_info.username,
                         "password": image_info.password,
                     },
-                    "ports": [{"name": "minio", "containerPort": config["port"]}],
-                    "config": {
+                    "ports": [
+                        {
+                            "name": "minio",
+                            "containerPort": config["port"],
+                        }
+                    ],
+                    "envConfig": {
                         "MINIO_ACCESS_KEY": config["access-key"],
                         "MINIO_SECRET_KEY": Path("/run/password").read_text(),
                     },
