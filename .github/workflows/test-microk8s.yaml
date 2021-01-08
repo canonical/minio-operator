@@ -1,11 +1,30 @@
-name: Charmed MinIO
+name: CI
 
 on:
   - push
   - pull_request
 
 jobs:
-  build:
+  check-formatting:
+    name: Check Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install python3-setuptools
+        sudo pip3 install black flake8
+
+    - name: Check black
+      run: black --check .
+
+    - name: Check flake8
+      run: flake8 .
+
+  test:
     name: Test
     runs-on: ubuntu-latest
 
@@ -24,28 +43,32 @@ jobs:
         sudo snap install juju --classic
         sudo snap install juju-wait --classic
 
-    - name: Deploy MinIO
+    - name: Bootstrap Juju
       run: |
         set -eux
         sg microk8s -c 'juju bootstrap microk8s uk8s'
         juju add-model minio
+
+    - name: Deploy MinIO
+      run: |
+        set -eux
         charm build .
-        juju deploy ~/charms/builds/minio/ \
-            --config secret-key=foobar \
+        juju deploy /tmp/charm-builds/minio \
+            --config secret-key=minio-secret-key \
             --resource oci-image=minio/minio:RELEASE.2018-02-09T22-40-05Z
         juju wait -wvt 300
 
     - name: Test MinIO
       run: |
-        set -eux
         kubectl run \
-            --rm \
-            -i \
-            --restart=Never \
-            --image=ubuntu \
-            minio-check \
-            -- \
-            bash -c "apt update && apt install -y curl && curl -f http://minio.minio.svc.cluster.local:9000/"
+        --rm \
+        -i \
+        --restart=Never \
+        --command sh \
+        --image=minio/mc \
+        -- \
+        sh -c \
+        "mc alias set ci http://minio.minio.svc.cluster.local:9000 minio minio-secret-key && mc mb ci/foo && mc rb ci/foo"
 
 
     - name: Get pod statuses
