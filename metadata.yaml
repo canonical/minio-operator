@@ -6,6 +6,7 @@ description: |
   enables customers to build cloud-native data infrastructure for
   machine learning, analytics and application data workloads.
 maintainers:
+  - "Dominik Fleischmann <dominik.fleischmann@canonical.com>"
   - "Eduardo Sousa <eduardo.sousa@canonical.com>"
   - "Kenneth Koski <kenneth.koski@canonical.com>"
   - "Kevin Monroe <kevin.monroe@canonical.com>"
