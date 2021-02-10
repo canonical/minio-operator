@@ -17,10 +17,10 @@ resources:
     type: oci-image
     description: Backing OCI image
     auto-fetch: true
-    upstream-source: minio/minio:RELEASE.2018-02-09T22-40-05Z
+    upstream-source: minio/minio:RELEASE.2021-02-07T01-31-02Z
 provides:
   minio:
-    interface: generic-ip-port-user-pass
+    interface: minio
 storage:
   minio-data:
     type: filesystem

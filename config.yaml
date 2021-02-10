@@ -1,11 +1,11 @@
 options:
   port:
-    type: int
-    default: 9000
-    description: Port to listen to
+    type: string
+    default: '9000'
+    description: HTTP port
   access-key:
     type: string
-    default: 'minio'
+    default: minio
     description: Access key
   secret-key:
     type: string
