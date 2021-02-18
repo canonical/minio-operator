@@ -15,7 +15,9 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install dependencies
-      run: sudo snap install charm --classic
+      run: |
+        sudo snap install charm --classic
+        sudo pip3 install charmcraft
 
     - name: Publish bundle
       env:
@@ -23,10 +25,11 @@ jobs:
       run: |
         set -eux
         echo $CHARMSTORE_CREDENTIAL > ~/.go-cookies
-        charm build .
-        docker pull minio/minio:RELEASE.2018-02-09T22-40-05Z
-        charm push /tmp/charm-builds/minio \
+        IMAGE_TAG="RELEASE.2021-02-07T01-31-02Z"
+        charmcraft build
+        docker pull minio/minio:$IMAGE_TAG
+        charm push ./minio.charm \
             cs:~minio-charmers/minio \
-            --resource oci-image=minio/minio:RELEASE.2018-02-09T22-40-05Z
+            --resource oci-image=minio/minio:$IMAGE_TAG
 
 
