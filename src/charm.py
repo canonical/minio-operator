@@ -10,6 +10,7 @@ from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus
 
 from oci_image import OCIImageResource, OCIImageResourceError
+from charms.minio.v0.minio_interface import MinioProvide
 
 log = logging.getLogger()
 
@@ -34,6 +35,7 @@ def gen_pass() -> str:
 class MinioCharm(CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
+        self.minio_interface = MinioProvide(self, "minio")
         self.image = OCIImageResource(self, "oci-image")
         self.framework.observe(self.on.install, self.set_pod_spec)
         self.framework.observe(self.on.upgrade_charm, self.set_pod_spec)
@@ -41,11 +43,20 @@ class MinioCharm(CharmBase):
         self.framework.observe(self.on.minio_relation_joined, self.send_info)
 
     def send_info(self, event):
-        secret_key = get_or_set("password", default=gen_pass)
-        event.relation.data[self.unit]["service"] = self.model.app.name
-        event.relation.data[self.unit]["port"] = self.model.config["port"]
-        event.relation.data[self.unit]["access-key"] = self.model.config["access-key"]
-        event.relation.data[self.unit]["secret-key"] = secret_key
+        secret_key = get_or_set(
+            "password",
+            configured=self.model.config["secret-key"],
+            default=gen_pass(),
+        )
+
+        self.minio_interface.update_relation_data(
+            {
+                "service": self.model.app.name,
+                "port": self.model.config["port"],
+                "access-key": self.model.config["access-key"],
+                "secret-key": secret_key,
+            }
+        )
 
     def set_pod_spec(self, event):
         if not self.model.unit.is_leader():
