@@ -23,12 +23,11 @@ class MinioCharm(CharmBase):
     _stored = StoredState()
 
     def __init__(self, *args):
+        super().__init__(*args)
         if not self.model.unit.is_leader():
             log.info("Not a leader, skipping set_pod_spec")
             self.model.unit.status = ActiveStatus()
             return
-
-        super().__init__(*args)
         self._stored.set_default(secret_key=gen_pass())
         self.minio_interface = MinioProvide(self, "minio")
         self.image = OCIImageResource(self, "oci-image")
