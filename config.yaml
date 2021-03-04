@@ -9,5 +9,5 @@ options:
     description: Access key
   secret-key:
     type: string
-    default: ~
+    default: ''
     description: Secret key

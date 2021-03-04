@@ -1,31 +1,18 @@
 #!/usr/bin/env python3
 
 import logging
-from pathlib import Path
 from random import choices
 from string import ascii_uppercase, digits
-from typing import Optional
+
 from ops.charm import CharmBase
+from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus
 
-from oci_image import OCIImageResource, OCIImageResourceError
 from charms.minio.v0.minio_interface import MinioProvide
+from oci_image import OCIImageResource, OCIImageResourceError
 
 log = logging.getLogger()
-
-
-def get_or_set(name: str, *, configured: Optional[str], default: str) -> str:
-    if configured:
-        Path(f"/run/{name}").write_text(configured)
-        return configured
-
-    try:
-        path = Path(f"/run/{name}")
-        return path.read_text()
-    except FileNotFoundError:
-        path.write_text(default)
-        return default
 
 
 def gen_pass() -> str:
@@ -33,21 +20,26 @@ def gen_pass() -> str:
 
 
 class MinioCharm(CharmBase):
+    _stored = StoredState()
+
     def __init__(self, *args):
+        if not self.model.unit.is_leader():
+            log.info("Not a leader, skipping set_pod_spec")
+            self.model.unit.status = ActiveStatus()
+            return
+
         super().__init__(*args)
+        self._stored.set_default(secret_key=gen_pass())
         self.minio_interface = MinioProvide(self, "minio")
         self.image = OCIImageResource(self, "oci-image")
         self.framework.observe(self.on.install, self.set_pod_spec)
         self.framework.observe(self.on.upgrade_charm, self.set_pod_spec)
         self.framework.observe(self.on.config_changed, self.set_pod_spec)
-        self.framework.observe(self.on.minio_relation_joined, self.send_info)
+        self.framework.observe(self.on.config_changed, self.send_info)
+        self.framework.observe(self.on["minio"].relation_joined, self.send_info)
 
     def send_info(self, event):
-        secret_key = get_or_set(
-            "password",
-            configured=self.model.config["secret-key"],
-            default=gen_pass(),
-        )
+        secret_key = self.model.config["secret-key"] or self._stored.secret_key
 
         self.minio_interface.update_relation_data(
             {
@@ -59,11 +51,6 @@ class MinioCharm(CharmBase):
         )
 
     def set_pod_spec(self, event):
-        if not self.model.unit.is_leader():
-            log.info("Not a leader, skipping set_pod_spec")
-            self.model.unit.status = ActiveStatus()
-            return
-
         try:
             image_details = self.image.fetch()
         except OCIImageResourceError as e:
@@ -71,11 +58,7 @@ class MinioCharm(CharmBase):
             log.info(e)
             return
 
-        secret_key = get_or_set(
-            "password",
-            configured=self.model.config["secret-key"],
-            default=gen_pass(),
-        )
+        secret_key = self.model.config["secret-key"] or self._stored.secret_key
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
         self.model.pod.set_spec(
