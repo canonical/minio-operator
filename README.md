@@ -1,12 +1,12 @@
-## MinIO Operators
+## MinIO Operator
 
 ### Overview
-This charm encompasses the Kubernetes Python operator for MinIO (see
+This charm encompasses the Kubernetes operator for MinIO (see
 [CharmHub](https://charmhub.io/?q=minio)).
 
-The MinIO operator is a Python script that wrap the latest released MinIO, providing
-lifecycle management for each application, and handling events (install, upgrade,
-integrate, remove).
+The MinIO operator is a Python script that wraps the latest released MinIO, providing
+lifecycle management for each application and handling events such as install, upgrade,
+integrate, and remove.
 
 ## Install
 
