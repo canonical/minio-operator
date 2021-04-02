@@ -19,8 +19,9 @@ resources:
     auto-fetch: true
     upstream-source: minio/minio:RELEASE.2021-02-07T01-31-02Z
 provides:
-  minio:
-    interface: minio
+  object-storage:
+    interface: object-storage
+    schema: https://gist.githubusercontent.com/knkski/386af79a681326fb1c2a8cb69e5b02d2/raw/6b6856aabce4cdc7c6a3dff990dce7e106a5fd7b/object-storage.yaml
 storage:
   minio-data:
     type: filesystem
