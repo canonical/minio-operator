@@ -7,9 +7,13 @@ from string import ascii_uppercase, digits
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus
+from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
 
-from serialized_data_interface import get_interfaces
+from serialized_data_interface import (
+    get_interfaces,
+    NoVersionsListed,
+    NoCompatibleVersions,
+)
 from oci_image import OCIImageResource, OCIImageResourceError
 
 log = logging.getLogger()
@@ -30,7 +34,15 @@ class Operator(CharmBase):
             return
 
         self._stored.set_default(secret_key=gen_pass())
-        self.interfaces = get_interfaces(self)
+        try:
+            self.interfaces = get_interfaces(self)
+        except NoVersionsListed as err:
+            self.model.unit.status = WaitingStatus(str(err))
+            return
+        except NoCompatibleVersions as err:
+            self.model.unit.status = BlockedStatus(str(err))
+            return
+
         self.image = OCIImageResource(self, "oci-image")
 
         self.framework.observe(self.on.install, self.set_pod_spec)
@@ -48,16 +60,17 @@ class Operator(CharmBase):
     def send_info(self, event):
         secret_key = self.model.config["secret-key"] or self._stored.secret_key
 
-        self.interfaces["object-storage"]["v1"].update_relation_data(
-            {
-                "access-key": self.model.config["access-key"],
-                "namespace": self.model.name,
-                "port": self.model.config["port"],
-                "secret-key": secret_key,
-                "secure": True,
-                "service": self.model.app.name,
-            }
-        )
+        if self.interfaces["object-storage"]:
+            self.interfaces["object-storage"].send_data(
+                {
+                    "access-key": self.model.config["access-key"],
+                    "namespace": self.model.name,
+                    "port": self.model.config["port"],
+                    "secret-key": secret_key,
+                    "secure": True,
+                    "service": self.model.app.name,
+                }
+            )
 
     def set_pod_spec(self, event):
         try:

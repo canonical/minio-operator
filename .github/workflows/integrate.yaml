@@ -5,8 +5,8 @@ on:
   - pull_request
 
 jobs:
-  check-formatting:
-    name: Check Formatting
+  lint:
+    name: Lint Check
     runs-on: ubuntu-latest
 
     steps:
@@ -15,17 +15,28 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get install python3-setuptools
-        sudo pip3 install black flake8
+        sudo apt-get install python3-pip tox
 
-    - name: Check black
-      run: black --check .
+    - name: Lint code
+      run: tox -e lint
 
-    - name: Check flake8
-      run: flake8 . --max-line-length 100
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-latest
 
-  test:
-    name: Test
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install python3-pip tox
+
+    - name: Run unit tests
+      run: tox -e unit
+
+  deploy:
+    name: Deploy Test
     runs-on: ubuntu-latest
 
     steps:
@@ -42,6 +53,7 @@ jobs:
         sudo pip3 install charmcraft
         sudo snap install juju --classic
         sudo snap install juju-wait --classic
+        sudo snap install yq
 
     - name: Bootstrap Juju
       run: |
@@ -52,10 +64,10 @@ jobs:
     - name: Deploy MinIO
       run: |
         set -eux
-        charmcraft build
+        charmcraft build -v
         juju deploy ./minio.charm \
           --config secret-key=minio-secret-key \
-          --resource oci-image=minio/minio:RELEASE.2021-02-07T01-31-02Z
+          --resource oci-image=$(yq eval '.resources.oci-image.upstream-source' metadata.yaml)
         juju wait -wvt 300
 
     - name: Test MinIO

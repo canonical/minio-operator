@@ -1,6 +1,6 @@
 import pytest
 import yaml
-from ops.model import ActiveStatus, BlockedStatus
+from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import Operator
@@ -43,6 +43,47 @@ def test_main_no_relation(harness):
     assert harness.charm.model.unit.status == ActiveStatus("")
 
 
+def test_incompatible_version(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    rel_id = harness.add_relation("object-storage", "argo-controller")
+    harness.add_relation_unit(rel_id, "argo-controller/0")
+    harness.update_relation_data(
+        rel_id,
+        "argo-controller",
+        {"_supported_versions": yaml.dump(["v2"])},
+    )
+    harness.begin_with_initial_hooks()
+    assert harness.charm.model.unit.status == BlockedStatus(
+        "No compatible object-storage versions found for apps: argo-controller"
+    )
+
+
+def test_unversioned(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    rel_id = harness.add_relation("object-storage", "argo-controller")
+    harness.add_relation_unit(rel_id, "argo-controller/0")
+    harness.begin_with_initial_hooks()
+    assert harness.charm.model.unit.status == WaitingStatus(
+        "List of object-storage versions not found for apps: argo-controller"
+    )
+
+
 def test_main_with_relation(harness):
     harness.set_leader(True)
     harness.add_oci_resource(
@@ -53,10 +94,22 @@ def test_main_with_relation(harness):
             "password": "",
         },
     )
-    rel_id = harness.add_relation("object-storage", "object-storage")
+    rel_id = harness.add_relation("object-storage", "argo-controller")
+    harness.add_relation_unit(rel_id, "argo-controller/0")
+    harness.update_relation_data(
+        rel_id,
+        "argo-controller",
+        {"_supported_versions": yaml.dump(["v1"])},
+    )
+    rel_id = harness.add_relation("object-storage", "foobar")
+    harness.add_relation_unit(rel_id, "foobar/0")
+    harness.update_relation_data(
+        rel_id,
+        "foobar",
+        {"_supported_versions": yaml.dump(["v1"])},
+    )
     harness.begin_with_initial_hooks()
     assert harness.charm.model.unit.status == ActiveStatus("")
-    harness.add_relation_unit(rel_id, "argo-controller/0")
 
     data = yaml.safe_load(harness.get_relation_data(rel_id, "minio")["data"])
     assert data["access-key"] == "minio"
@@ -77,7 +130,13 @@ def test_main_with_manual_secret(harness):
             "password": "",
         },
     )
-    rel_id = harness.add_relation("object-storage", "object-storage")
+    rel_id = harness.add_relation("object-storage", "argo-controller")
+    harness.add_relation_unit(rel_id, "argo-controller/0")
+    harness.update_relation_data(
+        rel_id,
+        "argo-controller",
+        {"_supported_versions": yaml.dump(["v1"])},
+    )
     harness.begin_with_initial_hooks()
     assert harness.charm.model.unit.status == ActiveStatus("")
 
