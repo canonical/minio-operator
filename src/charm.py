@@ -67,7 +67,7 @@ class Operator(CharmBase):
                     "namespace": self.model.name,
                     "port": self.model.config["port"],
                     "secret-key": secret_key,
-                    "secure": True,
+                    "secure": False,
                     "service": self.model.app.name,
                 }
             )

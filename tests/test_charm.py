@@ -115,7 +115,7 @@ def test_main_with_relation(harness):
     assert data["access-key"] == "minio"
     assert data["namespace"] is None
     assert data["port"] == 9000
-    assert data["secure"] is True
+    assert data["secure"] is False
     assert len(data["secret-key"]) == 30
     assert data["service"] == "minio"
 
@@ -147,7 +147,7 @@ def test_main_with_manual_secret(harness):
         "namespace": None,
         "port": 9000,
         "secret-key": "test-key",
-        "secure": True,
+        "secure": False,
         "service": "minio",
     }
     assert harness.charm.model.unit.status == ActiveStatus("")
