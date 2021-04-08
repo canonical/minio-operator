@@ -7,9 +7,13 @@ from string import ascii_uppercase, digits
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus
+from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
 
-from charms.minio.v0.minio_interface import MinioProvide
+from serialized_data_interface import (
+    get_interfaces,
+    NoVersionsListed,
+    NoCompatibleVersions,
+)
 from oci_image import OCIImageResource, OCIImageResourceError
 
 log = logging.getLogger()
@@ -19,7 +23,7 @@ def gen_pass() -> str:
     return "".join(choices(ascii_uppercase + digits, k=30))
 
 
-class MinioCharm(CharmBase):
+class Operator(CharmBase):
     _stored = StoredState()
 
     def __init__(self, *args):
@@ -28,26 +32,45 @@ class MinioCharm(CharmBase):
             log.info("Not a leader, skipping set_pod_spec")
             self.model.unit.status = ActiveStatus()
             return
+
         self._stored.set_default(secret_key=gen_pass())
-        self.minio_interface = MinioProvide(self, "minio")
+        try:
+            self.interfaces = get_interfaces(self)
+        except NoVersionsListed as err:
+            self.model.unit.status = WaitingStatus(str(err))
+            return
+        except NoCompatibleVersions as err:
+            self.model.unit.status = BlockedStatus(str(err))
+            return
+
         self.image = OCIImageResource(self, "oci-image")
+
         self.framework.observe(self.on.install, self.set_pod_spec)
         self.framework.observe(self.on.upgrade_charm, self.set_pod_spec)
         self.framework.observe(self.on.config_changed, self.set_pod_spec)
+
         self.framework.observe(self.on.config_changed, self.send_info)
-        self.framework.observe(self.on["minio"].relation_joined, self.send_info)
+        self.framework.observe(
+            self.on["object-storage"].relation_joined, self.send_info
+        )
+        self.framework.observe(
+            self.on["object-storage"].relation_changed, self.send_info
+        )
 
     def send_info(self, event):
         secret_key = self.model.config["secret-key"] or self._stored.secret_key
 
-        self.minio_interface.update_relation_data(
-            {
-                "service": self.model.app.name,
-                "port": self.model.config["port"],
-                "access-key": self.model.config["access-key"],
-                "secret-key": secret_key,
-            }
-        )
+        if self.interfaces["object-storage"]:
+            self.interfaces["object-storage"].send_data(
+                {
+                    "access-key": self.model.config["access-key"],
+                    "namespace": self.model.name,
+                    "port": self.model.config["port"],
+                    "secret-key": secret_key,
+                    "secure": True,
+                    "service": self.model.app.name,
+                }
+            )
 
     def set_pod_spec(self, event):
         try:
@@ -86,4 +109,4 @@ class MinioCharm(CharmBase):
 
 
 if __name__ == "__main__":
-    main(MinioCharm)
+    main(Operator)
