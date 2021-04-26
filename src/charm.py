@@ -4,19 +4,16 @@ import logging
 from random import choices
 from string import ascii_uppercase, digits
 
+from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus, BlockedStatus
-
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from serialized_data_interface import (
-    get_interfaces,
-    NoVersionsListed,
     NoCompatibleVersions,
+    NoVersionsListed,
+    get_interfaces,
 )
-from oci_image import OCIImageResource, OCIImageResourceError
-
-log = logging.getLogger()
 
 
 def gen_pass() -> str:
@@ -28,12 +25,15 @@ class Operator(CharmBase):
 
     def __init__(self, *args):
         super().__init__(*args)
+        self.log = logging.getLogger()
+
         if not self.model.unit.is_leader():
-            log.info("Not a leader, skipping set_pod_spec")
+            self.log.info("Not a leader, skipping set_pod_spec")
             self.model.unit.status = ActiveStatus()
             return
 
         self._stored.set_default(secret_key=gen_pass())
+
         try:
             self.interfaces = get_interfaces(self)
         except NoVersionsListed as err:
@@ -42,6 +42,8 @@ class Operator(CharmBase):
         except NoCompatibleVersions as err:
             self.model.unit.status = BlockedStatus(str(err))
             return
+        else:
+            self.model.unit.status = ActiveStatus()
 
         self.image = OCIImageResource(self, "oci-image")
 
@@ -77,7 +79,7 @@ class Operator(CharmBase):
             image_details = self.image.fetch()
         except OCIImageResourceError as e:
             self.model.unit.status = e.status
-            log.info(e)
+            self.log.info(e)
             return
 
         secret_key = self.model.config["secret-key"] or self._stored.secret_key
