@@ -17,7 +17,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo snap install charm --classic
-        sudo pip3 install charmcraft
+        sudo snap install charmcraft
 
     - name: Publish bundle
       env:
@@ -26,7 +26,7 @@ jobs:
         set -eux
         echo $CHARMSTORE_CREDENTIAL > ~/.go-cookies
         IMAGE_TAG="RELEASE.2021-02-07T01-31-02Z"
-        charmcraft build
+        tox -e build
         docker pull minio/minio:$IMAGE_TAG
         charm push ./minio.charm \
             cs:~minio-charmers/minio \
