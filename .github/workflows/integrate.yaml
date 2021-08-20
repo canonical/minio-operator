@@ -12,95 +12,62 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
-
     - name: Install dependencies
       run: |
-        sudo apt-get install python3-pip tox
-
+        pip install tox
     - name: Lint code
-      run: tox -e lint
+      run: tox -vve lint
 
   unit:
     name: Unit Test
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          pip install tox
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get install python3-pip tox
+      - name: Run unit tests
+        run: tox -vve unit
 
-    - name: Run unit tests
-      run: tox -e unit
-
-  deploy:
-    name: Deploy Test
+  integration:
+    name: Integration Test (deploy and access)
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out repo
-      uses: actions/checkout@v2
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: microk8s
 
-    - uses: balchua/microk8s-actions@v0.2.2
-      with:
-        addons: '["dns", "storage", "rbac"]'
+      # TODO: Remove once the actions-operator does this automatically
+      - name: Configure kubectl
+        run: |
+          sg microk8s -c "microk8s config > ~/.kube/config"
 
-    - name: Install dependencies
-      run: |
-        set -eux
-        sudo pip3 install charmcraft==1.0.0
-        sudo snap install juju --classic
-        sudo snap install juju-wait --classic
-        sudo snap install yq
+      - name: Build and test
+        run: |
+          sg microk8s -c "tox -vve integration"
 
-    # Avoid race condition with storage taking a long time to initialize
-    - name: Wait for storage
-      run: |
-        sg microk8s -c 'microk8s kubectl rollout status deployment/hostpath-provisioner -n kube-system'
+      # On failure, capture debugging resources
+      - name: Get all
+        run: kubectl get all -A
+        if: failure()
 
-    - name: Bootstrap Juju
-      run: |
-        set -eux
-        sg microk8s -c 'juju bootstrap microk8s uk8s'
-        juju add-model minio
+      - name: Get juju status
+        run: juju status
+        if: failure()
 
-    - name: Deploy MinIO
-      run: |
-        set -eux
-        charmcraft build -v
-        juju deploy ./minio.charm \
-          --config secret-key=minio-secret-key \
-          --resource oci-image=$(yq eval '.resources.oci-image.upstream-source' metadata.yaml)
-        juju wait -wvt 300
-
-    - name: Test MinIO
-      run: |
-        kubectl run \
-        --rm \
-        -i \
-        --restart=Never \
-        --command sh \
-        --image=minio/mc \
-        -- \
-        sh -c \
-        "mc alias set ci http://minio.minio.svc.cluster.local:9000 minio minio-secret-key && mc mb ci/foo && mc rb ci/foo"
-
-
-    - name: Get all
-      run: kubectl get all -A
-      if: failure()
-
-    - name: Get juju status
-      run: juju status
-      if: failure()
-
-    - name: Get minio logs
-      run: kubectl logs --tail 100 -nminio -ljuju-app=minio
-      if: failure()
-
-    - name: Get minio operator logs
-      run: kubectl logs --tail 100 -nminio -ljuju-operator=minio
-      if: failure()
-
+      # TODO: How can we capture this if using pytest operator?  Create our own model and keep it
+      #  after tests end?
+#      - name: Get minio logs
+#        run: kubectl logs --tail 100 -nminio -ljuju-app=minio
+#        if: failure()
+#
+#      - name: Get minio operator logs
+#        run: kubectl logs --tail 100 -nminio -ljuju-operator=minio
+#        if: failure()
