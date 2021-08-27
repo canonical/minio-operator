@@ -51,7 +51,7 @@ jobs:
 
       - name: Build and test
         run: |
-          sg microk8s -c "tox -vve integration"
+          sg microk8s -c "tox -vve integration -- --model testing"
 
       # On failure, capture debugging resources
       - name: Get all
@@ -62,12 +62,10 @@ jobs:
         run: juju status
         if: failure()
 
-      # TODO: How can we capture this if using pytest operator?  Create our own model and keep it
-      #  after tests end?
-#      - name: Get minio logs
-#        run: kubectl logs --tail 100 -nminio -ljuju-app=minio
-#        if: failure()
-#
-#      - name: Get minio operator logs
-#        run: kubectl logs --tail 100 -nminio -ljuju-operator=minio
-#        if: failure()
+      - name: Get minio logs
+        run: kubectl logs --tail 100 -n testing -ljuju-app=minio
+        if: failure()
+
+      - name: Get minio operator logs
+        run: kubectl logs --tail 100 -n testing -ljuju-operator=minio
+        if: failure()
