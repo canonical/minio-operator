@@ -17,7 +17,7 @@ resources:
     type: oci-image
     description: Backing OCI image
     auto-fetch: true
-    upstream-source: minio/minio:RELEASE.2021-02-07T01-31-02Z
+    upstream-source: minio/minio:RELEASE.2021-09-03T03-56-13Z
 provides:
   object-storage:
     interface: object-storage
