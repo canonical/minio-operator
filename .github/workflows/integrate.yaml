@@ -9,36 +9,33 @@ on:
 
 jobs:
   lint:
-    name: Lint Check
+    name: Lint Code
     runs-on: ubuntu-latest
-
     steps:
     - name: Check out code
       uses: actions/checkout@v2
     - name: Install dependencies
       run: |
-        pip install tox
+        sudo apt update
+        sudo apt install tox
     - name: Lint code
       run: tox -vve lint
 
   unit:
-    name: Unit Test
+    name: Unit Tests
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           pip install tox
-
       - name: Run unit tests
         run: tox -vve unit
 
   integration:
     name: Integration Test (deploy and access)
     runs-on: ubuntu-latest
-
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -61,14 +58,22 @@ jobs:
         run: kubectl get all -A
         if: failure()
 
+      - name: Describe deployments
+        run: kubectl describe deployments -A
+        if: failure()
+
+      - name: Describe replicasets
+        run: kubectl describe replicasets -A
+        if: failure()
+
       - name: Get juju status
         run: juju status
         if: failure()
 
-      - name: Get minio logs
+      - name: Get application logs
         run: kubectl logs --tail 100 -n testing -ljuju-app=minio
         if: failure()
 
-      - name: Get minio operator logs
+      - name: Get operator logs
         run: kubectl logs --tail 100 -n testing -ljuju-operator=minio
         if: failure()
