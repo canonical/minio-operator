@@ -18,18 +18,19 @@ jobs:
       run: |
         sudo snap install charm --classic
         sudo pip3 install charmcraft==1.0.0
+        sudo snap install yq
 
-    - name: Publish bundle
+    - name: Publish
       env:
         CHARMSTORE_CREDENTIAL: ${{ secrets.CHARMSTORE_CREDENTIAL }}
       run: |
         set -eux
         echo $CHARMSTORE_CREDENTIAL > ~/.go-cookies
-        IMAGE_TAG="RELEASE.2021-02-07T01-31-02Z"
+        IMAGE=$(yq eval '.resources.oci-image.upstream-source' metadata.yaml)
         charmcraft build
-        docker pull minio/minio:$IMAGE_TAG
+        docker pull $IMAGE
         charm push ./minio.charm \
             cs:~minio-charmers/minio \
-            --resource oci-image=minio/minio:$IMAGE_TAG
+            --resource oci-image=$IMAGE
 
 
