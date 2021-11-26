@@ -42,6 +42,8 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: microk8s
+          channel: 1.21/stable
+          charmcraft-channel: latest/candidate
 
       # TODO: Remove once the actions-operator does this automatically
       - name: Configure kubectl

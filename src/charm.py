@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
 
 import logging
 from random import choices
@@ -16,10 +18,6 @@ from serialized_data_interface import (
 )
 
 
-def gen_pass() -> str:
-    return "".join(choices(ascii_uppercase + digits, k=30))
-
-
 class Operator(CharmBase):
     _stored = StoredState()
 
@@ -27,62 +25,33 @@ class Operator(CharmBase):
         super().__init__(*args)
         self.log = logging.getLogger()
 
-        if not self.model.unit.is_leader():
-            self.log.info("Not a leader, skipping set_pod_spec")
-            self.model.unit.status = ActiveStatus()
-            return
-
-        self._stored.set_default(secret_key=gen_pass())
-
-        try:
-            self.interfaces = get_interfaces(self)
-        except NoVersionsListed as err:
-            self.model.unit.status = WaitingStatus(str(err))
-            return
-        except NoCompatibleVersions as err:
-            self.model.unit.status = BlockedStatus(str(err))
-            return
-        else:
-            self.model.unit.status = ActiveStatus()
+        self._stored.set_default(secret_key=_gen_pass())
 
         self.image = OCIImageResource(self, "oci-image")
 
-        self.framework.observe(self.on.install, self.set_pod_spec)
-        self.framework.observe(self.on.upgrade_charm, self.set_pod_spec)
-        self.framework.observe(self.on.config_changed, self.set_pod_spec)
+        for event in [
+            self.on.config_changed,
+            self.on.install,
+            self.on.upgrade_charm,
+            self.on["object-storage"].relation_changed,
+            self.on["object-storage"].relation_joined,
+        ]:
+            self.framework.observe(event, self.main)
 
-        self.framework.observe(self.on.config_changed, self.send_info)
-        self.framework.observe(
-            self.on["object-storage"].relation_joined, self.send_info
-        )
-        self.framework.observe(
-            self.on["object-storage"].relation_changed, self.send_info
-        )
-
-    def send_info(self, event):
-        secret_key = self.model.config["secret-key"] or self._stored.secret_key
-
-        if self.interfaces["object-storage"]:
-            self.interfaces["object-storage"].send_data(
-                {
-                    "access-key": self.model.config["access-key"],
-                    "namespace": self.model.name,
-                    "port": self.model.config["port"],
-                    "secret-key": secret_key,
-                    "secure": False,
-                    "service": self.model.app.name,
-                }
-            )
-
-    def set_pod_spec(self, event):
+    def main(self, event):
         try:
-            image_details = self.image.fetch()
-        except OCIImageResourceError as e:
-            self.model.unit.status = e.status
-            self.log.info(e)
+            self._check_leader()
+
+            interfaces = self._get_interfaces()
+
+            image_details = self._check_image_details()
+
+        except CheckFailed as error:
+            self.model.unit.status = error.status
             return
 
         secret_key = self.model.config["secret-key"] or self._stored.secret_key
+        self._send_info(interfaces, secret_key)
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
         self.model.pod.set_spec(
@@ -108,6 +77,55 @@ class Operator(CharmBase):
             }
         )
         self.model.unit.status = ActiveStatus()
+
+    def _check_leader(self):
+        if not self.unit.is_leader():
+            self.log.info("Not a leader, skipping set_pod_spec")
+            raise CheckFailed("", ActiveStatus)
+
+    def _get_interfaces(self):
+        try:
+            interfaces = get_interfaces(self)
+        except NoVersionsListed as err:
+            raise CheckFailed(str(err), WaitingStatus)
+        except NoCompatibleVersions as err:
+            raise CheckFailed(str(err), BlockedStatus)
+        return interfaces
+
+    def _check_image_details(self):
+        try:
+            image_details = self.image.fetch()
+        except OCIImageResourceError as e:
+            raise CheckFailed(f"{e.status_message}: oci-image", e.status_type)
+        return image_details
+
+    def _send_info(self, interfaces, secret_key):
+        if interfaces["object-storage"]:
+            interfaces["object-storage"].send_data(
+                {
+                    "access-key": self.model.config["access-key"],
+                    "namespace": self.model.name,
+                    "port": self.model.config["port"],
+                    "secret-key": secret_key,
+                    "secure": False,
+                    "service": self.model.app.name,
+                }
+            )
+
+
+def _gen_pass() -> str:
+    return "".join(choices(ascii_uppercase + digits, k=30))
+
+
+class CheckFailed(Exception):
+    """ Raise this exception if one of the checks in main fails. """
+
+    def __init__(self, msg, status_type=None):
+        super().__init__()
+
+        self.msg = msg
+        self.status_type = status_type
+        self.status = status_type(msg)
 
 
 if __name__ == "__main__":
