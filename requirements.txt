@@ -1,3 +1,6 @@
-ops==1.1.0
+# Copyright 2021 Canonical Ltd.
+# See LICENSE file for licensing details.
+
+ops==1.2.0
 oci-image
 serialized-data-interface<0.4
