@@ -2,7 +2,6 @@
 # See LICENSE file for licensing details.
 
 name: minio
-display-name: MinIO
 summary: Kubernetes Native, High Performance Object Storage
 description: |
   MinIO's high-performance object storage suite is software defined and
