@@ -1,18 +1,11 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
-
 name: minio
 summary: Kubernetes Native, High Performance Object Storage
 description: |
   MinIO's high-performance object storage suite is software defined and
   enables customers to build cloud-native data infrastructure for
   machine learning, analytics and application data workloads.
-maintainers:
-  - "Dominik Fleischmann <dominik.fleischmann@canonical.com>"
-  - "Eduardo Sousa <eduardo.sousa@canonical.com>"
-  - "Kenneth Koski <kenneth.koski@canonical.com>"
-  - "Kevin Monroe <kevin.monroe@canonical.com>"
-tags: [file-servers, storage]
 series: [kubernetes]
 resources:
   oci-image:
@@ -30,4 +23,3 @@ storage:
     type: filesystem
     location: /data
     minimum-size: 10G
-min-juju-version: 2.8.6
