@@ -154,3 +154,85 @@ def test_main_with_manual_secret(harness):
         "service": "minio",
     }
     assert harness.charm.model.unit.status == ActiveStatus("")
+
+
+def test_server_minio_args(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    harness.update_config({"secret-key": "test-key"})
+    harness.begin_with_initial_hooks()
+    pod_spec = harness.get_pod_spec()
+
+    assert pod_spec == (
+        {
+            "version": 3,
+            "containers": [
+                {
+                    "name": "minio",
+                    "args": ["server", "/data"],
+                    "imageDetails": {
+                        "imagePath": "ci-test",
+                        "username": "",
+                        "password": "",
+                    },
+                    "ports": [{"name": "minio", "containerPort": 9000}],
+                    "envConfig": {
+                        "MINIO_ACCESS_KEY": "minio",
+                        "MINIO_SECRET_KEY": "test-key",
+                    },
+                }
+            ],
+        },
+        None,
+    )
+
+
+def test_gateway_minio_args(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    harness.update_config(
+        {
+            "secret-key": "test-key",
+            "mode": "gateway",
+            "gateway_storage_service": "azure",
+        }
+    )
+    harness.begin_with_initial_hooks()
+    pod_spec = harness.get_pod_spec()
+
+    assert pod_spec == (
+        {
+            "version": 3,
+            "containers": [
+                {
+                    "name": "minio",
+                    "args": ["gateway", "azure"],
+                    "imageDetails": {
+                        "imagePath": "ci-test",
+                        "username": "",
+                        "password": "",
+                    },
+                    "ports": [{"name": "minio", "containerPort": 9000}],
+                    "envConfig": {
+                        "MINIO_ACCESS_KEY": "minio",
+                        "MINIO_SECRET_KEY": "test-key",
+                    },
+                }
+            ],
+        },
+        None,
+    )

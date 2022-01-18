@@ -46,6 +46,8 @@ class Operator(CharmBase):
 
             image_details = self._check_image_details()
 
+            minio_args = self._get_minio_args()
+
         except CheckFailed as error:
             self.model.unit.status = error.status
             return
@@ -60,7 +62,7 @@ class Operator(CharmBase):
                 "containers": [
                     {
                         "name": "minio",
-                        "args": ["server", "/data"],
+                        "args": minio_args,
                         "imageDetails": image_details,
                         "ports": [
                             {
@@ -111,6 +113,22 @@ class Operator(CharmBase):
                     "service": self.model.app.name,
                 }
             )
+
+    def _get_minio_args(self):
+        model_mode = self.model.config["mode"]
+        if model_mode == "server":
+            return ["server", "/data"]
+        elif model_mode == "gateway":
+            storage = self.model.config["gateway_storage_service"]
+            self.log.debug(f"Minio args: gateway, {storage}")
+            return ["gateway", storage]
+        else:
+            error_msg = (
+                f"Model mode {model_mode} is not supported. "
+                "Possible values server, gateway"
+            )
+            self.log.error(error_msg)
+            raise CheckFailed(error_msg, BlockedStatus)
 
 
 def _gen_pass() -> str:
