@@ -119,9 +119,16 @@ class Operator(CharmBase):
         if model_mode == "server":
             return ["server", "/data"]
         elif model_mode == "gateway":
-            storage = self.model.config["gateway_storage_service"]
-            self.log.debug(f"Minio args: gateway, {storage}")
-            return ["gateway", storage]
+            storage = self.model.config.get("gateway_storage_service")
+            if storage:
+                self.log.debug(f"Minio args: gateway, {storage}")
+                return ["gateway", storage]
+            else:
+                raise CheckFailed(
+                    "Minio in gateway mode requires gateway_storage_service "
+                    "configuration. Possible values: s3, azure",
+                    BlockedStatus,
+                )
         else:
             error_msg = (
                 f"Model mode {model_mode} is not supported. "

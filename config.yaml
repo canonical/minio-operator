@@ -21,4 +21,4 @@ options:
   gateway_storage_service:
     type: string
     default: ''
-    description: "Storage service used by gateway to store objects. Possible values: s3, azure"
+    description: "Storage service used by gateway to store objects. This value is required for gateway mode. Possible values: s3, azure"

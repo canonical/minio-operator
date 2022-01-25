@@ -236,3 +236,27 @@ def test_gateway_minio_args(harness):
         },
         None,
     )
+
+
+def test_gateway_minio_missing_args(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    harness.update_config(
+        {
+            "secret-key": "test-key",
+            "mode": "gateway",
+        }
+    )
+    harness.begin_with_initial_hooks()
+
+    assert harness.charm.model.unit.status == BlockedStatus(
+        "Minio in gateway mode requires gateway_storage_service configuration. "
+        "Possible values: s3, azure"
+    )
