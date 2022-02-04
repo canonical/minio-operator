@@ -277,7 +277,7 @@ def test_gateway_minio_with_private_endpoint(harness):
             "secret-key": "test-key",
             "mode": "gateway",
             "gateway-storage-service": "azure",
-            "service_endpoint": "http://someendpoint"
+            "storage-service-endpoint": "http://someendpoint",
         }
     )
     harness.begin_with_initial_hooks()
