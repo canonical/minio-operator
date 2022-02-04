@@ -24,7 +24,7 @@ To install MinIO in gateway mode for s3, run:
 
     juju deploy minio minio-s3-gateway \
         --config mode=gateway \
-        --config gateway_storage_service=s3 \
+        --config gateway-storage-service=s3 \
         --config access-key=<aws_s3_access_key> \
         --config secret-key=<aws_s3_secret_key>
 
@@ -32,9 +32,13 @@ To install MinIO in gateway mode for azure, run:
 
     juju deploy minio minio-azure-gateway \
         --config mode=gateway \
-        --config gateway_storage_service=azure \
+        --config gateway-storage-service=azure \
         --config access-key=<azurestorageaccountname> \
         --config secret-key=<azurestorageaccountkey>
+
+In case of using private endpoints for storage service
+specify `storage-endpoint-service`. This configuration is optional in case of
+using S3 or Azure public endpoints.
 
 If you do not want to share your data storage service credentials with users,
 you can create users in MinIO console with proper permissions for them.

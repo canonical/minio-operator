@@ -208,7 +208,7 @@ def test_gateway_minio_args(harness):
         {
             "secret-key": "test-key",
             "mode": "gateway",
-            "gateway_storage_service": "azure",
+            "gateway-storage-service": "azure",
         }
     )
     harness.begin_with_initial_hooks()
@@ -257,6 +257,51 @@ def test_gateway_minio_missing_args(harness):
     harness.begin_with_initial_hooks()
 
     assert harness.charm.model.unit.status == BlockedStatus(
-        "Minio in gateway mode requires gateway_storage_service configuration. "
+        "Minio in gateway mode requires gateway-storage-service configuration. "
         "Possible values: s3, azure"
+    )
+
+
+def test_gateway_minio_with_private_endpoint(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    harness.update_config(
+        {
+            "secret-key": "test-key",
+            "mode": "gateway",
+            "gateway-storage-service": "azure",
+            "service_endpoint": "http://someendpoint"
+        }
+    )
+    harness.begin_with_initial_hooks()
+    pod_spec = harness.get_pod_spec()
+
+    assert pod_spec == (
+        {
+            "version": 3,
+            "containers": [
+                {
+                    "name": "minio",
+                    "args": ["gateway", "azure", "http://someendpoint"],
+                    "imageDetails": {
+                        "imagePath": "ci-test",
+                        "username": "",
+                        "password": "",
+                    },
+                    "ports": [{"name": "minio", "containerPort": 9000}],
+                    "envConfig": {
+                        "MINIO_ACCESS_KEY": "minio",
+                        "MINIO_SECRET_KEY": "test-key",
+                    },
+                }
+            ],
+        },
+        None,
     )
