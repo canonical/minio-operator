@@ -18,7 +18,11 @@ options:
     type: string
     default: 'server'
     description: "Mode of operations. Possible values: server, gateway"
-  gateway_storage_service:
+  gateway-storage-service:
     type: string
     default: ''
     description: "Storage service used by gateway to store objects. This value is required for gateway mode. Possible values: s3, azure"
+  storage-service-endpoint:
+    type: string
+    default: ''
+    description: "Service endpoint of gateway storage service. This value is optional when using S3 or Azure public API endpoints"
