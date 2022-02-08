@@ -16,9 +16,20 @@ To install MinIO, run:
 
 For more information, see https://juju.is/docs
 
-## Gateway mode
+## Operation Modes
 
-Supported data storage services: s3, azure
+MinIO can be operated in the following modes:
+
+* `server` (default): MinIO stores any data "locally", handling all aspects of the
+  data storage within the deployed workload and storage in cluster
+* `gateway`: MinIO works as a gateway to a separate blob storage (such as Amazon S3),
+  providing an access layer to your data for in-cluster workloads
+
+### Exmple using `gateway` mode
+
+This charm supports using the following backing data storage services:
+* s3
+* azure
 
 To install MinIO in gateway mode for s3, run:
 
@@ -40,8 +51,10 @@ In case of using private endpoints for storage service
 specify `storage-endpoint-service`. This configuration is optional in case of
 using S3 or Azure public endpoints.
 
-If you do not want to share your data storage service credentials with users,
-you can create users in MinIO console with proper permissions for them.
+By default, the backing storage credentials are also used as the credentials
+to connect to the MinIO gateway itself.  If you do not want to share your 
+data storage service credentials with users, you can create users in the
+MinIO console with proper permissions for them.
 
 For more information,
 see: https://docs.min.io/docs/minio-multi-user-quickstart-guide.html
