@@ -3,6 +3,7 @@
 
 import pytest
 import yaml
+from base64 import b64decode
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
@@ -170,28 +171,10 @@ def test_server_minio_args(harness):
     harness.begin_with_initial_hooks()
     pod_spec = harness.get_pod_spec()
 
-    assert pod_spec == (
-        {
-            "version": 3,
-            "containers": [
-                {
-                    "name": "minio",
-                    "args": ["server", "/data"],
-                    "imageDetails": {
-                        "imagePath": "ci-test",
-                        "username": "",
-                        "password": "",
-                    },
-                    "ports": [{"name": "minio", "containerPort": 9000}],
-                    "envConfig": {
-                        "MINIO_ACCESS_KEY": "minio",
-                        "MINIO_SECRET_KEY": "test-key",
-                    },
-                }
-            ],
-        },
-        None,
-    )
+    pod_spec_secrets = pod_spec[0]["kubernetesResources"]["secrets"]
+    pod_spec_secret_key = pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
+
+    assert b64decode(pod_spec_secret_key).decode("utf-8") == "test-key"
 
 
 def test_gateway_minio_args(harness):
@@ -214,28 +197,11 @@ def test_gateway_minio_args(harness):
     harness.begin_with_initial_hooks()
     pod_spec = harness.get_pod_spec()
 
-    assert pod_spec == (
-        {
-            "version": 3,
-            "containers": [
-                {
-                    "name": "minio",
-                    "args": ["gateway", "azure"],
-                    "imageDetails": {
-                        "imagePath": "ci-test",
-                        "username": "",
-                        "password": "",
-                    },
-                    "ports": [{"name": "minio", "containerPort": 9000}],
-                    "envConfig": {
-                        "MINIO_ACCESS_KEY": "minio",
-                        "MINIO_SECRET_KEY": "test-key",
-                    },
-                }
-            ],
-        },
-        None,
-    )
+    pod_spec_secrets = pod_spec[0]["kubernetesResources"]["secrets"]
+    pod_spec_secret_key = pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
+
+    assert b64decode(pod_spec_secret_key).decode("utf-8") == "test-key"
+    assert pod_spec[0]["containers"][0]["args"] == ["gateway", "azure"]
 
 
 def test_gateway_minio_missing_args(harness):

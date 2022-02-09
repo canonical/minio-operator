@@ -5,6 +5,7 @@
 import logging
 from random import choices
 from string import ascii_uppercase, digits
+from base64 import b64encode
 
 from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
@@ -71,11 +72,25 @@ class Operator(CharmBase):
                             }
                         ],
                         "envConfig": {
-                            "MINIO_ACCESS_KEY": self.model.config["access-key"],
-                            "MINIO_SECRET_KEY": secret_key,
+                            "minio-secret": {"secret": {"name": "minio-secret"}},
                         },
                     }
                 ],
+                "kubernetesResources": {
+                    "secrets": [
+                        {
+                            "name": "minio-secret",
+                            "type": "Opaque",
+                            "data": {
+                                k: b64encode(v.encode("utf-8")).decode("utf-8")
+                                for k, v in {
+                                    "MINIO_ACCESS_KEY": self.model.config["access-key"],
+                                    "MINIO_SECRET_KEY": secret_key,
+                                }.items()
+                            },
+                        }
+                    ]
+                },
             }
         )
         self.model.unit.status = ActiveStatus()
