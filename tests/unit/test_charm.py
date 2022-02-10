@@ -230,6 +230,12 @@ def test_gateway_minio_missing_args(harness):
 
 def test_gateway_minio_with_private_endpoint(harness):
     harness.set_leader(True)
+
+    secret_key = "test-key"
+    minio_mode = "gateway"
+    storage_service = "azure"
+    storage_service_endpoint = "http://someendpoint"
+
     harness.add_oci_resource(
         "oci-image",
         {
@@ -240,34 +246,20 @@ def test_gateway_minio_with_private_endpoint(harness):
     )
     harness.update_config(
         {
-            "secret-key": "test-key",
-            "mode": "gateway",
-            "gateway-storage-service": "azure",
-            "storage-service-endpoint": "http://someendpoint",
+            "secret-key": secret_key,
+            "mode": minio_mode,
+            "gateway-storage-service": storage_service,
+            "storage-service-endpoint": storage_service_endpoint,
         }
     )
     harness.begin_with_initial_hooks()
     pod_spec = harness.get_pod_spec()
 
-    assert pod_spec == (
-        {
-            "version": 3,
-            "containers": [
-                {
-                    "name": "minio",
-                    "args": ["gateway", "azure", "http://someendpoint"],
-                    "imageDetails": {
-                        "imagePath": "ci-test",
-                        "username": "",
-                        "password": "",
-                    },
-                    "ports": [{"name": "minio", "containerPort": 9000}],
-                    "envConfig": {
-                        "MINIO_ACCESS_KEY": "minio",
-                        "MINIO_SECRET_KEY": "test-key",
-                    },
-                }
-            ],
-        },
-        None,
-    )
+    expected_container_args = [minio_mode, storage_service, storage_service_endpoint]
+    assert pod_spec[0]["containers"][0]["args"] == expected_container_args
+
+    pod_spec_secrets = pod_spec[0]["kubernetesResources"]["secrets"]
+    pod_spec_secret_key = b64decode(
+        pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
+    ).decode("utf-8")
+    assert pod_spec_secret_key == secret_key
