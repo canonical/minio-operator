@@ -175,6 +175,12 @@ def test_server_minio_args(harness):
     pod_spec_secret_key = pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
 
     assert b64decode(pod_spec_secret_key).decode("utf-8") == "test-key"
+    assert pod_spec[0]["containers"][0]["args"] == [
+        "server",
+        "/data",
+        "--console-address",
+        ":9001",
+    ]
 
 
 def test_gateway_minio_args(harness):
@@ -201,7 +207,12 @@ def test_gateway_minio_args(harness):
     pod_spec_secret_key = pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
 
     assert b64decode(pod_spec_secret_key).decode("utf-8") == "test-key"
-    assert pod_spec[0]["containers"][0]["args"] == ["gateway", "azure"]
+    assert pod_spec[0]["containers"][0]["args"] == [
+        "gateway",
+        "azure",
+        "--console-address",
+        ":9001",
+    ]
 
 
 def test_gateway_minio_missing_args(harness):
@@ -255,7 +266,13 @@ def test_gateway_minio_with_private_endpoint(harness):
     harness.begin_with_initial_hooks()
     pod_spec = harness.get_pod_spec()
 
-    expected_container_args = [minio_mode, storage_service, storage_service_endpoint]
+    expected_container_args = [
+        minio_mode,
+        storage_service,
+        storage_service_endpoint,
+        "--console-address",
+        ":9001",
+    ]
     assert pod_spec[0]["containers"][0]["args"] == expected_container_args
 
     pod_spec_secrets = pod_spec[0]["kubernetesResources"]["secrets"]
@@ -263,3 +280,30 @@ def test_gateway_minio_with_private_endpoint(harness):
         pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
     ).decode("utf-8")
     assert pod_spec_secret_key == secret_key
+
+
+def test_minio_console_port_args(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    harness.update_config(
+        {
+            "secret-key": "test-key",
+            "console-port": 9999,
+        }
+    )
+    harness.begin_with_initial_hooks()
+    pod_spec = harness.get_pod_spec()
+
+    assert pod_spec[0]["containers"][0]["args"] == [
+        "server",
+        "/data",
+        "--console-address",
+        ":9999",
+    ]
