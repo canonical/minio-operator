@@ -104,8 +104,6 @@ async def test_connect_to_console(ops_test: OpsTest):
 
     url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
 
-    cmd = f"curl -I {url}"
-
     kubectl_cmd = (
         "microk8s",
         "kubectl",
