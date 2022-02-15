@@ -118,7 +118,9 @@ async def test_connect_to_console(ops_test: OpsTest):
         "minio-deployment-test",
         "--image=curlimages/curl",
         "--",
-        cmd,
+        "curl",
+        "-I",
+        url,
     )
 
     ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
