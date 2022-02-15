@@ -104,7 +104,7 @@ async def test_connect_to_console(ops_test: OpsTest):
 
     url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
 
-    cmd = f"curl -I {url} --silent | head -n 1 | cut -d$' ' -f2"
+    cmd = f"curl -I {url}"
 
     kubectl_cmd = (
         "microk8s",
@@ -126,4 +126,3 @@ async def test_connect_to_console(ops_test: OpsTest):
     assert (
         ret_code == 0
     ), f"Test returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
-    assert (stdout == "200")
