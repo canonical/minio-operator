@@ -84,3 +84,50 @@ async def test_connect_client_to_server(ops_test: OpsTest):
     assert (
         ret_code == 0
     ), f"Test returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
+
+
+async def test_connect_to_console(ops_test: OpsTest):
+    """
+    Tests a deployed MinIO app by trying to connect to the MinIO console
+    """
+    # TODO: This presumes we're using microk8s.  Fix that.
+    #  could just call kubectl and count on the outside environment aliasing it for us?
+    #  or could pass kubectl path in as a variable?
+
+    application = ops_test.model.applications[APP_NAME]
+    config = await application.get_config()
+    port = config["console-port"]["value"]
+    # TODO: how do I dynamically retrieve the minio k8s service name?
+    service_name = APP_NAME
+    model_name = ops_test.model_name
+    log.info(f"ops_test.model_name = {ops_test.model_name}")
+
+    url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
+
+    cmd = (
+        f"curl -I {url} | head -n 1| cut -d$' ' -f2"
+    )
+
+    kubectl_cmd = (
+        "microk8s",
+        "kubectl",
+        "run",
+        "--rm",
+        "-i",
+        "--restart=Never",
+        "--command",
+        f"--namespace={ops_test.model_name}",
+        "minio-deployment-test",
+        "--image=curlimages/curl",
+        "--",
+        "sh",
+        "-c",
+        cmd,
+    )
+
+    ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
+
+    assert (
+        ret_code == 0
+    ), f"Test returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
+    assert (stdout == 200)
