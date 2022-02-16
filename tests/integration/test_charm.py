@@ -41,16 +41,12 @@ async def test_connect_client_to_server(ops_test: OpsTest):
     """
     Tests a deployed MinIO app by trying to connect to it from a pod and do trivial actions with it
     """
-    # TODO: This presumes we're using microk8s.  Fix that.
-    #  could just call kubectl and count on the outside environment aliasing it for us?
-    #  or could pass kubectl path in as a variable?
 
     application = ops_test.model.applications[APP_NAME]
     config = await application.get_config()
     port = config["port"]["value"]
     alias = "ci"
     bucket = "testbucket"
-    # TODO: how do I dynamically retrieve the minio k8s service name?
     service_name = APP_NAME
     model_name = ops_test.model_name
     log.info(f"ops_test.model_name = {ops_test.model_name}")
@@ -90,14 +86,10 @@ async def test_connect_to_console(ops_test: OpsTest):
     """
     Tests a deployed MinIO app by trying to connect to the MinIO console
     """
-    # TODO: This presumes we're using microk8s.  Fix that.
-    #  could just call kubectl and count on the outside environment aliasing it for us?
-    #  or could pass kubectl path in as a variable?
 
     application = ops_test.model.applications[APP_NAME]
     config = await application.get_config()
     port = config["console-port"]["value"]
-    # TODO: how do I dynamically retrieve the minio k8s service name?
     service_name = APP_NAME
     model_name = ops_test.model_name
     log.info(f"ops_test.model_name = {ops_test.model_name}")
