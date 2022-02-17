@@ -6,6 +6,10 @@ options:
     type: int
     default: 9000
     description: HTTP port
+  console-port:
+    type: int
+    default: 9001
+    description: HTTP port for minio console
   access-key:
     type: string
     default: 'minio'

@@ -69,7 +69,11 @@ class Operator(CharmBase):
                             {
                                 "name": "minio",
                                 "containerPort": int(self.model.config["port"]),
-                            }
+                            },
+                            {
+                                "name": "console",
+                                "containerPort": int(self.model.config["console-port"]),
+                            },
                         ],
                         "envConfig": {
                             "minio-secret": {"secret": {"name": "minio-secret"}},
@@ -132,9 +136,9 @@ class Operator(CharmBase):
     def _get_minio_args(self):
         model_mode = self.model.config["mode"]
         if model_mode == "server":
-            return ["server", "/data"]
+            return self._with_console_address(["server", "/data"])
         elif model_mode == "gateway":
-            return self._get_minio_args_gateway()
+            return self._with_console_address(self._get_minio_args_gateway())
         else:
             error_msg = (
                 f"Model mode {model_mode} is not supported. "
@@ -158,6 +162,10 @@ class Operator(CharmBase):
                 "configuration. Possible values: s3, azure",
                 BlockedStatus,
             )
+
+    def _with_console_address(self, minio_args):
+        console_port = str(self.model.config["console-port"])
+        return [*minio_args, "--console-address", ":" + console_port]
 
 
 def _gen_pass() -> str:

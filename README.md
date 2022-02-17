@@ -16,6 +16,16 @@ To install MinIO, run:
 
 For more information, see https://juju.is/docs
 
+## MinIO console
+
+Minio console is available under port 9001. To change this port use
+configuration variable `console-port`, run:
+
+    juju config minio console-port=9999
+
+For more information,
+see [minio-console documentation](https://docs.min.io/minio/baremetal/console/minio-console.html)
+
 ## Operation Modes
 
 MinIO can be operated in the following modes:
