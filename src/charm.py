@@ -76,14 +76,16 @@ class Operator(CharmBase):
                             },
                         ],
                         "envConfig": {
-                            "minio-secret": {"secret": {"name": "minio-secret"}},
+                            "minio-secret": {
+                                "secret": {"name": f"{self.model.app.name}-secret"}
+                            },
                         },
                     }
                 ],
                 "kubernetesResources": {
                     "secrets": [
                         {
-                            "name": "minio-secret",
+                            "name": f"{self.model.app.name}-secret",
                             "type": "Opaque",
                             "data": {
                                 k: b64encode(v.encode("utf-8")).decode("utf-8")
