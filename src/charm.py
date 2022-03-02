@@ -76,7 +76,9 @@ class Operator(CharmBase):
                             },
                         ],
                         "envConfig": {
-                            "minio-secret": {"secret": {"name": f"{self.model.app.name}-secret"}},
+                            "minio-secret": {
+                                "secret": {"name": f"{self.model.app.name}-secret"}
+                            },
                         },
                     }
                 ],
@@ -185,4 +187,3 @@ class CheckFailed(Exception):
 
 if __name__ == "__main__":
     main(Operator)
-
