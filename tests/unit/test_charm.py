@@ -173,6 +173,7 @@ def test_server_minio_args(harness):
 
     pod_spec_secrets = pod_spec[0]["kubernetesResources"]["secrets"]
     pod_spec_secret_key = pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
+    pod_spec_secret_name = pod_spec_secrets[0]["name"]
 
     assert b64decode(pod_spec_secret_key).decode("utf-8") == "test-key"
     assert pod_spec[0]["containers"][0]["args"] == [
@@ -181,6 +182,7 @@ def test_server_minio_args(harness):
         "--console-address",
         ":9001",
     ]
+    assert pod_spec_secret_name == f"{harness.model.app.name}-secret"
 
 
 def test_gateway_minio_args(harness):
