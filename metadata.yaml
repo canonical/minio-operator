@@ -24,3 +24,8 @@ storage:
     type: filesystem
     location: /data
     minimum-size: 10G
+requires:
+  ingress:
+    interface: ingress
+    schema: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
+    versions: [v1]
