@@ -56,7 +56,7 @@ class Operator(CharmBase):
         secret_key = self.model.config["secret-key"] or self._stored.secret_key
         self._send_info(interfaces, secret_key)
 
-        self._configure_mesh(interfaces)
+        self._configure_ingress(interfaces)
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
         self.model.pod.set_spec(
@@ -171,13 +171,21 @@ class Operator(CharmBase):
         console_port = str(self.model.config["console-port"])
         return [*minio_args, "--console-address", ":" + console_port]
 
-    def _configure_mesh(self, interfaces):
+    def _configure_ingress(self, interfaces):
         if interfaces["ingress"]:
             interfaces["ingress"].send_data(
                 {
-                    "prefix": "/minio",
+                    "prefix": "/",
                     "rewrite": "/",
-                    "service": self.model.app.name,
+                    "service": f"{self.model.app.name}-console",
+                    "port": self.model.config["console-port"],
+                }
+            )
+            interfaces["ingress"].send_data(
+                {
+                    "prefix": "/",
+                    "rewrite": "/",
+                    "service": f"{self.model.app.name}",
                     "port": self.model.config["port"],
                 }
             )
