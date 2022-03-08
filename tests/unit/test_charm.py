@@ -309,3 +309,65 @@ def test_minio_console_port_args(harness):
         "--console-address",
         ":9999",
     ]
+
+def test_install_with_all_inputs(harness):
+    harness.set_leader(True)
+    harness.add_oci_resource(
+        "oci-image",
+        {
+            "registrypath": "ci-test",
+            "username": "",
+            "password": "",
+        },
+    )
+    harness.update_config(
+        {
+            "secret-key": "test-secret-key",
+            "access-key": "test-access-key",
+            "mode": "gateway",
+            "gateway-storage-service": "azure",
+        }
+    )
+
+    # object storage
+    os_rel_id = harness.add_relation("object-storage", "foobar")
+    harness.add_relation_unit(os_rel_id, "foobar/0")
+    harness.update_relation_data(
+        os_rel_id,
+        "foobar",
+        {"_supported_versions": yaml.dump(["v1"])},
+    )
+
+    # ingress
+    ingress_relation_name = "ingress"
+    relation_version_data = {"_supported_versions": "- v1"}
+    ingress_rel_id = harness.add_relation(
+        ingress_relation_name, f"{ingress_relation_name}-subscriber"
+    )
+    harness.add_relation_unit(ingress_rel_id, f"{ingress_relation_name}-subscriber/0")
+    harness.update_relation_data(
+        ingress_rel_id, f"{ingress_relation_name}-subscriber", relation_version_data
+    )
+
+    harness.begin_with_initial_hooks()
+
+    pod_spec = harness.get_pod_spec()
+    yaml.safe_dump(pod_spec)
+    assert harness.charm.model.unit.status == ActiveStatus()
+
+    charm_name = harness.model.app.name
+    secrets = pod_spec[0]["kubernetesResources"]["secrets"]
+    env_config = pod_spec[0]["containers"][0]["envConfig"]
+
+    pod_spec_secrets = pod_spec[0]["kubernetesResources"]["secrets"]
+    pod_spec_secret_key = pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
+    pod_spec_access_key = pod_spec_secrets[0]["data"]["MINIO_ACCESS_KEY"]
+
+    assert b64decode(pod_spec_secret_key).decode("utf-8") == "test-secret-key"
+    assert b64decode(pod_spec_access_key).decode("utf-8") == "test-access-key"
+    assert pod_spec[0]["containers"][0]["args"] == [
+        "gateway",
+        "azure",
+        "--console-address",
+        ":9001",
+    ]
