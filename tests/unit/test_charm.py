@@ -310,6 +310,7 @@ def test_minio_console_port_args(harness):
         ":9999",
     ]
 
+
 def test_install_with_all_inputs(harness):
     harness.set_leader(True)
     harness.add_oci_resource(
@@ -354,10 +355,6 @@ def test_install_with_all_inputs(harness):
     pod_spec = harness.get_pod_spec()
     yaml.safe_dump(pod_spec)
     assert harness.charm.model.unit.status == ActiveStatus()
-
-    charm_name = harness.model.app.name
-    secrets = pod_spec[0]["kubernetesResources"]["secrets"]
-    env_config = pod_spec[0]["containers"][0]["envConfig"]
 
     pod_spec_secrets = pod_spec[0]["kubernetesResources"]["secrets"]
     pod_spec_secret_key = pod_spec_secrets[0]["data"]["MINIO_SECRET_KEY"]
