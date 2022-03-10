@@ -172,21 +172,13 @@ class Operator(CharmBase):
         return [*minio_args, "--console-address", ":" + console_port]
 
     def _configure_ingress(self, interfaces):
-        if interfaces["ingress"]:
-            interfaces["ingress"].send_data(
+        if interfaces["console-ingress"]:
+            interfaces["console-ingress"].send_data(
                 {
                     "prefix": "/",
                     "rewrite": "/",
                     "service": f"{self.model.app.name}-console",
                     "port": self.model.config["console-port"],
-                }
-            )
-            interfaces["ingress"].send_data(
-                {
-                    "prefix": "/",
-                    "rewrite": "/",
-                    "service": f"{self.model.app.name}",
-                    "port": self.model.config["port"],
                 }
             )
 

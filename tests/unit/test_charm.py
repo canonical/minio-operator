@@ -340,7 +340,7 @@ def test_install_with_all_inputs(harness):
     )
 
     # ingress
-    ingress_relation_name = "ingress"
+    ingress_relation_name = "console-ingress"
     relation_version_data = {"_supported_versions": "- v1"}
     ingress_rel_id = harness.add_relation(
         ingress_relation_name, f"{ingress_relation_name}-subscriber"
@@ -368,3 +368,12 @@ def test_install_with_all_inputs(harness):
         "--console-address",
         ":9001",
     ]
+    data = yaml.safe_load(harness.get_relation_data(os_rel_id, "minio")["data"])
+    assert data == {
+        "access-key": "test-access-key",
+        "namespace": None,
+        "port": 9000,
+        "secret-key": "test-secret-key",
+        "secure": False,
+        "service": "minio",
+    }
