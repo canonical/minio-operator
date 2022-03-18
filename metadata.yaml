@@ -24,7 +24,7 @@ provides:
   grafana-dashboard:
     interface: grafana_dashboard
 storage:
-  minio_data:
+  minio-data:
     type: filesystem
     location: /data
     minimum-size: 10G
