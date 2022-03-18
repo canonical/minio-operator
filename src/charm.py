@@ -8,6 +8,8 @@ from string import ascii_uppercase, digits
 from base64 import b64encode
 from hashlib import sha256
 
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
+from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.framework import StoredState
@@ -32,12 +34,31 @@ class Operator(CharmBase):
 
         self.image = OCIImageResource(self, "oci-image")
 
+        self.prometheus_provider = MetricsEndpointProvider(
+            charm=self,
+            relation_name="monitoring",
+            jobs=[
+                {
+                    "job_name": "minio_metrics",
+                    "scrape_interval": "30s",
+                    "metrics_path": "/minio/v2/metrics",
+                    "static_configs": [
+                        {"targets": ["*:{}".format(self.config["port"])]}
+                    ],
+                }
+            ],
+        )
+        self.dashboard_provider = GrafanaDashboardProvider(self)
+
         for event in [
             self.on.config_changed,
             self.on.install,
             self.on.upgrade_charm,
             self.on["object-storage"].relation_changed,
             self.on["object-storage"].relation_joined,
+            self.on["monitoring"].relation_changed,
+            self.on["monitoring"].relation_broken,
+            self.on["monitoring"].relation_departed,
         ]:
             self.framework.observe(event, self.main)
 

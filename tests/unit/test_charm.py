@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 import yaml
+import json
 from base64 import b64decode
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
@@ -379,3 +380,32 @@ def test_generate_config_hash(config, hash_salt, expected_hash, harness):
 # TODO: test get_secret_key
 # TODO: How can I test whether the hash/password gets randomly generated if respective config is
 #  omitted?  Or can/should I at all?
+
+
+def test_prometheus_data_set(harness, mocker):
+    harness.set_leader(True)
+    harness.set_model_name("kubeflow")
+    harness.begin()
+
+    mock_net_get = mocker.patch("ops.testing._TestingModelBackend.network_get")
+    mocker.patch("ops.testing._TestingPebbleClient.list_files")
+
+    bind_address = "1.1.1.1"
+    fake_network = {
+        "bind-addresses": [
+            {
+                "interface-name": "eth0",
+                "addresses": [
+                    {"hostname": "cassandra-tester-0", "value": bind_address}
+                ],
+            }
+        ]
+    }
+    mock_net_get.return_value = fake_network
+    rel_id = harness.add_relation("monitoring", "otherapp")
+    harness.add_relation_unit(rel_id, "otherapp/0")
+    harness.update_relation_data(rel_id, "otherapp", {})
+
+    assert json.loads(
+        harness.get_relation_data(rel_id, harness.model.app.name)["scrape_jobs"]
+    )[0]["static_configs"][0]["targets"] == ["*:9000"]
