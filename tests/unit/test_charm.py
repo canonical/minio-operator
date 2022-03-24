@@ -1,5 +1,6 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
+from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 import yaml
@@ -309,3 +310,67 @@ def test_minio_console_port_args(harness):
         "--console-address",
         ":9999",
     ]
+
+
+@pytest.mark.parametrize(
+    "config,hash_salt,expected_hash",
+    [
+        (  # Standard working case
+                {"access-key": "access-key-value", "secret-key": "secret-key-value"},
+                "hash-salt",
+                "9b25665b7652ab845b909c718f6c66dccb0946a7ef8ddd607b85198d6deabe5f",
+        ),
+        (  # Vary the sorted order of keys
+                {"x_last_alphabetical_order": "access-key-value", "secret-key": "secret-key-value"},
+                "hash-salt",
+                "a33e4682a38734508a9c8cb6971761636fefb0225eab0cb897443f1cf1317a07",
+        ),
+        (  # Vary the access-key
+                {"access-key": "access-key-value1", "secret-key": "secret-key-value"},
+                "hash-salt",
+                "162ba72393a4993626d553f2e64255f0998a70ef1b8ed4ea73652920d014898d",
+        ),
+        (  # Vary the salt
+                {"access-key": "access-key-value", "secret-key": "secret-key-value"},
+                "hash-salt1",
+                "82c0d902422d085cfc5d5d652d7ebd78175042705542fe7db9866a259bd06528",
+        ),    ]
+)
+def test_generate_config_hash(config, hash_salt, expected_hash, harness):
+    ##################
+    # Setup test
+
+    harness.begin()
+
+    # Mock config to use a controlled subset of keys.  This avoids the expected hash changing
+    # whenever someone adds a new config option
+
+    # Use tuple(generator) instead of generator directly - if we use the bare generator directly
+    # it'll raise an exception in update_config because update_config will be editing the object
+    # we're taking keys() from
+    old_keys = tuple(harness.charm.config.keys())
+    harness.update_config(unset=old_keys)
+    assert len(harness.charm.config.keys()) == 0, "Failed to delete default config keys"
+
+    # Avoid triggering config_changed as hooks may have unexpected failures due to reduced config
+    # data
+    with harness.hooks_disabled():
+        harness.update_config(config)
+
+    # Mock away _stored with known values
+    harness.charm._stored = MagicMock()
+    mocked_salt = PropertyMock(return_value=hash_salt)
+    type(harness.charm._stored).hash_salt = mocked_salt
+
+    ##################
+    # Execute test
+
+    hashed_config = harness.charm._generate_config_hash()
+
+    ##################
+    # Check results
+    assert expected_hash == hashed_config
+
+
+# TODO: test get_secret_key
+# TODO: How can I test whether the hash/password gets randomly generated if omitted?  Or can/should I?
