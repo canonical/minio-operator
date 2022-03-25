@@ -84,9 +84,9 @@ class Operator(CharmBase):
                                 "secret": {"name": f"{self.model.app.name}-secret"}
                             },
                             # This hash forces a restart for pods whenever we change the config.
-                            # This would ideally be a spec.template.metadata.annotation rather than an environment
-                            # variable (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
-                            # but we cannot change that using podspec.
+                            # This would ideally be a spec.template.metadata.annotation rather
+                            # than an environment variable, but we cannot use that using podspec.
+                            # (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
                             "configmap-hash": configmap_hash,
                         },
                     }
@@ -149,7 +149,9 @@ class Operator(CharmBase):
         # Add a randomly generated salt to the config to make it hard to reverse engineer the
         # secret-key from the password.
         salt = self._stored.hash_salt
-        all_config = tuple(str(self.model.config[name]) for name in sorted(self.model.config.keys())) + (salt,)
+        all_config = tuple(
+            str(self.model.config[name]) for name in sorted(self.model.config.keys())
+        ) + (salt,)
         config_hash = sha256(".".join(all_config).encode("utf-8"))
         return config_hash.hexdigest()
 
@@ -199,7 +201,6 @@ class Operator(CharmBase):
                 self._stored.set_default(secret_key=secret)
 
         return secret
-
 
     def _with_console_address(self, minio_args):
         console_port = str(self.model.config["console-port"])

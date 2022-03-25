@@ -316,25 +316,29 @@ def test_minio_console_port_args(harness):
     "config,hash_salt,expected_hash",
     [
         (  # Standard working case
-                {"access-key": "access-key-value", "secret-key": "secret-key-value"},
-                "hash-salt",
-                "9b25665b7652ab845b909c718f6c66dccb0946a7ef8ddd607b85198d6deabe5f",
+            {"access-key": "access-key-value", "secret-key": "secret-key-value"},
+            "hash-salt",
+            "9b25665b7652ab845b909c718f6c66dccb0946a7ef8ddd607b85198d6deabe5f",
         ),
         (  # Vary the sorted order of keys
-                {"x_last_alphabetical_order": "access-key-value", "secret-key": "secret-key-value"},
-                "hash-salt",
-                "a33e4682a38734508a9c8cb6971761636fefb0225eab0cb897443f1cf1317a07",
+            {
+                "x_last_alphabetical_order": "access-key-value",
+                "secret-key": "secret-key-value",
+            },
+            "hash-salt",
+            "a33e4682a38734508a9c8cb6971761636fefb0225eab0cb897443f1cf1317a07",
         ),
         (  # Vary the access-key
-                {"access-key": "access-key-value1", "secret-key": "secret-key-value"},
-                "hash-salt",
-                "162ba72393a4993626d553f2e64255f0998a70ef1b8ed4ea73652920d014898d",
+            {"access-key": "access-key-value1", "secret-key": "secret-key-value"},
+            "hash-salt",
+            "162ba72393a4993626d553f2e64255f0998a70ef1b8ed4ea73652920d014898d",
         ),
         (  # Vary the salt
-                {"access-key": "access-key-value", "secret-key": "secret-key-value"},
-                "hash-salt1",
-                "82c0d902422d085cfc5d5d652d7ebd78175042705542fe7db9866a259bd06528",
-        ),    ]
+            {"access-key": "access-key-value", "secret-key": "secret-key-value"},
+            "hash-salt1",
+            "82c0d902422d085cfc5d5d652d7ebd78175042705542fe7db9866a259bd06528",
+        ),
+    ],
 )
 def test_generate_config_hash(config, hash_salt, expected_hash, harness):
     ##################
@@ -373,4 +377,5 @@ def test_generate_config_hash(config, hash_salt, expected_hash, harness):
 
 
 # TODO: test get_secret_key
-# TODO: How can I test whether the hash/password gets randomly generated if omitted?  Or can/should I?
+# TODO: How can I test whether the hash/password gets randomly generated if respective config is
+#  omitted?  Or can/should I at all?
