@@ -193,7 +193,7 @@ class Operator(CharmBase):
             try:
                 # Try to use a randomly generated default key from the past
                 secret = self._stored.secret_key
-            except KeyError:
+            except AttributeError:
                 # Create and store a randomly generated default key to reuse in future
                 secret = _gen_pass()
                 self._stored.set_default(secret_key=secret)
