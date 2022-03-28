@@ -162,3 +162,31 @@ async def test_connect_to_console(ops_test: OpsTest):
     assert (
         ret_code == 0
     ), f"Test returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
+
+
+async def test_refresh_credentials(ops_test: OpsTest):
+    """Tests that changing access/secret correctly gets reflected in workload
+
+    Note: This test is not idempotent - it leaves the charm with different credentials than how it
+          started.  We could move credential changing and resetting to a fixture so it always
+          restored them if that becomes a problem.
+
+    Note: Untested here is whether setting the config to the current value (eg: a no-op) correctly
+          avoids restarting the workload.
+    """
+    # Update credentials in deployed Minio's config
+    application = ops_test.model.applications[APP_NAME]
+    old_config = await application.get_config()
+    config = {
+        "access-key": old_config["access-key"]["value"] + "modified",
+        "secret-key": old_config["secret-key"]["value"] + "modified",
+    }
+    await application.set_config(config)
+
+    # helper raises if failed
+    await connect_client_to_server_with_retry(
+        ops_test=ops_test,
+        application=application,
+        access_key=config["access-key"],
+        secret_key=config["secret-key"],
+    )
