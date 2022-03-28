@@ -5,6 +5,7 @@ import logging
 from pathlib import Path
 
 import pytest
+from tenacity import retry, stop_after_delay, wait_exponential
 import yaml
 from pytest_operator.plugin import OpsTest
 
@@ -35,6 +36,35 @@ async def test_build_and_deploy(ops_test: OpsTest):
         config=MINIO_CONFIG,
     )
     await ops_test.model.wait_for_idle(timeout=60 * 10)
+
+
+@retry(
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    stop=stop_after_delay(60),
+    reraise=True,
+)
+async def connect_client_to_server_with_retry(
+    ops_test: OpsTest, application, access_key=None, secret_key=None
+):
+    ret_code, stdout, stderr = await connect_client_to_server(
+        ops_test=ops_test,
+        application=application,
+        access_key=access_key,
+        secret_key=secret_key,
+    )
+    log.info(f"Trying to connect to minio via mc client")
+
+    if ret_code != 0:
+        msg = (
+            f"Connection to Minio returned code {ret_code} with stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}."
+        )
+        log.warning(msg + "  If this persists, this may be an error")
+
+        raise ValueError(msg)
+
+    else:
+        return ret_code, stdout, stderr
 
 
 async def connect_client_to_server(
@@ -102,7 +132,7 @@ async def test_connect_client_to_server(ops_test: OpsTest):
     """
 
     application = ops_test.model.applications[APP_NAME]
-    ret_code, stdout, stderr = await connect_client_to_server(
+    ret_code, stdout, stderr = await connect_client_to_server_with_retry(
         ops_test=ops_test, application=application
     )
 

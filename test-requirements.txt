@@ -1,8 +1,9 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-pytest
-pyyaml
 flake8
 black==20.8b1
 flake8-copyright<0.3
+pytest
+pyyaml
+tenacity<8.1
