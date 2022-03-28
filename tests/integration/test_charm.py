@@ -37,12 +37,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(timeout=60 * 10)
 
 
-async def test_connect_client_to_server(ops_test: OpsTest):
-    """
-    Tests a deployed MinIO app by trying to connect to it from a pod and do trivial actions with it
-    """
-
-    application = ops_test.model.applications[APP_NAME]
+async def connect_client_to_server(ops_test: OpsTest, application):
     config = await application.get_config()
     port = config["port"]["value"]
     alias = "ci"
@@ -76,7 +71,16 @@ async def test_connect_client_to_server(ops_test: OpsTest):
         minio_cmd,
     )
 
-    ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
+    return await ops_test.run(*kubectl_cmd)
+
+
+async def test_connect_client_to_server(ops_test: OpsTest):
+    """
+    Tests a deployed MinIO app by trying to connect to it from a pod and do trivial actions with it
+    """
+
+    application = ops_test.model.applications[APP_NAME]
+    ret_code, stdout, stderr = await connect_client_to_server(ops_test=ops_test, application=application)
 
     assert (
         ret_code == 0
