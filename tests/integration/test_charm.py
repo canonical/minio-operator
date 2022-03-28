@@ -52,7 +52,7 @@ async def connect_client_to_server_with_retry(
         access_key=access_key,
         secret_key=secret_key,
     )
-    log.info(f"Trying to connect to minio via mc client")
+    log.info("Trying to connect to minio via mc client")
 
     if ret_code != 0:
         msg = (
