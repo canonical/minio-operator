@@ -37,8 +37,29 @@ async def test_build_and_deploy(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(timeout=60 * 10)
 
 
-async def connect_client_to_server(ops_test: OpsTest, application):
+async def connect_client_to_server(
+    ops_test: OpsTest, application, access_key=None, secret_key=None
+):
+    """Connects to the minio server using a minio client
+    Args:
+        ops_test: fixture
+        application: Minio application to connect to
+        access_key (str): (Optional) access-key for minio login.  If omitted, will be pulled from
+                          application's config
+        secret_key (str): (Optional) secret-key for minio login.  If omitted, will be pulled from
+                          application's config
+
+    Returns:
+        Tuple of return code, stderr, and stdout from kubectl call from launching the test pod
+        using kubectl
+    """
     config = await application.get_config()
+
+    if access_key is None:
+        access_key = config["access-key"]["value"]
+    if secret_key is None:
+        secret_key = config["secret-key"]["value"]
+
     port = config["port"]["value"]
     alias = "ci"
     bucket = "testbucket"
@@ -49,7 +70,7 @@ async def connect_client_to_server(ops_test: OpsTest, application):
     url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
 
     minio_cmd = (
-        f"mc alias set {alias} {url} {MINIO_CONFIG['access-key']} {MINIO_CONFIG['secret-key']}"
+        f"mc alias set {alias} {url} {access_key} {secret_key}"
         f"&& mc mb {alias}/{bucket}"
         f"&& mc rb {alias}/{bucket}"
     )
@@ -71,7 +92,8 @@ async def connect_client_to_server(ops_test: OpsTest, application):
         minio_cmd,
     )
 
-    return await ops_test.run(*kubectl_cmd)
+    ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
+    return ret_code, stdout, stderr
 
 
 async def test_connect_client_to_server(ops_test: OpsTest):
@@ -80,7 +102,9 @@ async def test_connect_client_to_server(ops_test: OpsTest):
     """
 
     application = ops_test.model.applications[APP_NAME]
-    ret_code, stdout, stderr = await connect_client_to_server(ops_test=ops_test, application=application)
+    ret_code, stdout, stderr = await connect_client_to_server(
+        ops_test=ops_test, application=application
+    )
 
     assert (
         ret_code == 0
