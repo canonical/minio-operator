@@ -56,6 +56,7 @@ async def test_connect_client_to_server(ops_test: OpsTest):
     minio_cmd = (
         f"mc alias set {alias} {url} {MINIO_CONFIG['access-key']} {MINIO_CONFIG['secret-key']}"
         f"&& mc mb {alias}/{bucket}"
+        f"&& mc rb {alias}/{bucket}"
     )
 
     kubectl_cmd = (
