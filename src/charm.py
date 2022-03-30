@@ -36,6 +36,8 @@ class Operator(CharmBase):
             self.on.upgrade_charm,
             self.on["object-storage"].relation_changed,
             self.on["object-storage"].relation_joined,
+            self.on["console-ingress"].relation_changed,
+            self.on["console-ingress"].relation_joined,
         ]:
             self.framework.observe(event, self.main)
 
@@ -55,6 +57,8 @@ class Operator(CharmBase):
 
         secret_key = self.model.config["secret-key"] or self._stored.secret_key
         self._send_info(interfaces, secret_key)
+
+        self._configure_ingress(interfaces)
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
         self.model.pod.set_spec(
@@ -168,6 +172,17 @@ class Operator(CharmBase):
     def _with_console_address(self, minio_args):
         console_port = str(self.model.config["console-port"])
         return [*minio_args, "--console-address", ":" + console_port]
+
+    def _configure_ingress(self, interfaces):
+        if interfaces["console-ingress"]:
+            interfaces["console-ingress"].send_data(
+                {
+                    "prefix": "/",
+                    "rewrite": "/",
+                    "service": f"{self.model.app.name}-console",
+                    "port": self.model.config["console-port"],
+                }
+            )
 
 
 def _gen_pass() -> str:
