@@ -36,6 +36,8 @@ class Operator(CharmBase):
             self.on.upgrade_charm,
             self.on["object-storage"].relation_changed,
             self.on["object-storage"].relation_joined,
+            self.on["console-ingress"].relation_changed,
+            self.on["console-ingress"].relation_joined,
         ]:
             self.framework.observe(event, self.main)
 
