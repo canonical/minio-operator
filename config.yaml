@@ -30,3 +30,7 @@ options:
     type: string
     default: ''
     description: "Service endpoint of gateway storage service. This value is optional when using S3 or Azure public API endpoints"
+  service-type:
+    type: string
+    default: 'ClusterIP'
+    description: "Service type to configure the minio service.  Options are ClusterIP, NodePort, ExternalName, or LoadBalancer"

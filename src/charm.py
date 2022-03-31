@@ -95,7 +95,29 @@ class Operator(CharmBase):
                                 }.items()
                             },
                         }
-                    ]
+                    ],
+                    "services": [
+                        {
+                            "name": "minio",
+                            "spec": {
+                                "ports": [
+                                    {
+                                        "name": "minio",
+                                        "port": self.model.config["port"],
+                                        "protocol": "TCP",
+                                        "targetPort": self.model.config["port"],
+                                    },
+                                    {
+                                        "name": "console",
+                                        "port": self.model.config["console-port"],
+                                        "protocol": "TCP",
+                                        "targetPort": self.model.config["console-port"],
+                                    },
+                                ],
+                                "type": self.model.config["service-type"],
+                            },
+                        }
+                    ],
                 },
             }
         )
