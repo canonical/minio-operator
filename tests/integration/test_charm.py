@@ -5,9 +5,9 @@ import logging
 from pathlib import Path
 
 import pytest
-from tenacity import retry, stop_after_delay, wait_exponential
-import yaml
 from pytest_operator.plugin import OpsTest
+from tenacity import Retrying, stop_after_delay, wait_exponential
+import yaml
 
 log = logging.getLogger(__name__)
 
@@ -38,39 +38,10 @@ async def test_build_and_deploy(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(timeout=60 * 10)
 
 
-@retry(
-    wait=wait_exponential(multiplier=1, min=1, max=10),
-    stop=stop_after_delay(60),
-    reraise=True,
-)
-async def connect_client_to_server_with_retry(
-    ops_test: OpsTest, application, access_key=None, secret_key=None
-):
-    ret_code, stdout, stderr = await connect_client_to_server(
-        ops_test=ops_test,
-        application=application,
-        access_key=access_key,
-        secret_key=secret_key,
-    )
-    log.info("Trying to connect to minio via mc client")
-
-    if ret_code != 0:
-        msg = (
-            f"Connection to Minio returned code {ret_code} with stdout:\n{stdout}\n"
-            f"stderr:\n{stderr}."
-        )
-        log.warning(msg + "  If this persists, this may be an error")
-
-        raise ValueError(msg)
-
-    else:
-        return ret_code, stdout, stderr
-
-
 async def connect_client_to_server(
     ops_test: OpsTest, application, access_key=None, secret_key=None
 ):
-    """Connects to the minio server using a minio client
+    """Connects to the minio server using a minio client. raising a ConnectionError if failed
     Args:
         ops_test: fixture
         application: Minio application to connect to
@@ -80,8 +51,7 @@ async def connect_client_to_server(
                           application's config
 
     Returns:
-        Tuple of return code, stderr, and stdout from kubectl call from launching the test pod
-        using kubectl
+        None
     """
     config = await application.get_config()
 
@@ -95,7 +65,6 @@ async def connect_client_to_server(
     bucket = "testbucket"
     service_name = APP_NAME
     model_name = ops_test.model_name
-    log.info(f"ops_test.model_name = {ops_test.model_name}")
 
     url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
 
@@ -123,22 +92,38 @@ async def connect_client_to_server(
     )
 
     ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
-    return ret_code, stdout, stderr
+
+    if ret_code != 0:
+        raise ConnectionError(
+            f"Connection to Minio returned code {ret_code} with stdout:\n{stdout}\n"
+            f"stderr:\n{stderr}."
+        )
+    else:
+        return
 
 
 async def test_connect_client_to_server(ops_test: OpsTest):
     """
-    Tests a deployed MinIO app by trying to connect to it from a pod and do trivial actions with it
+    Tests a deployed MinIO by connecting with mc (MinIO client) via a Pod.
     """
 
     application = ops_test.model.applications[APP_NAME]
-    ret_code, stdout, stderr = await connect_client_to_server_with_retry(
-        ops_test=ops_test, application=application
-    )
 
-    assert (
-        ret_code == 0
-    ), f"Test returned code {ret_code} with stdout:\n{stdout}\nstderr:\n{stderr}"
+    for attempt in retry_for_60_seconds:
+        log.info(
+            f"Test attempting to connect to minio using mc client (attempt "
+            f"{attempt.retry_state.attempt_number})"
+        )
+        with attempt:
+            await connect_client_to_server(ops_test=ops_test, application=application)
+
+
+# Helper to retry calling a function over 60 seconds
+retry_for_60_seconds = Retrying(
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    stop=stop_after_delay(60),
+    reraise=True,
+)
 
 
 async def test_connect_to_console(ops_test: OpsTest):
