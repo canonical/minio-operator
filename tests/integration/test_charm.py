@@ -183,10 +183,15 @@ async def test_refresh_credentials(ops_test: OpsTest):
     }
     await application.set_config(config)
 
-    # helper raises if failed
-    await connect_client_to_server_with_retry(
-        ops_test=ops_test,
-        application=application,
-        access_key=config["access-key"],
-        secret_key=config["secret-key"],
-    )
+    for attempt in retry_for_60_seconds:
+        log.info(
+            f"Test attempting to connect to minio using mc client (attempt "
+            f"{attempt.retry_state.attempt_number})"
+        )
+        with attempt:
+            await connect_client_to_server(
+                ops_test=ops_test,
+                application=application,
+                access_key=config["access-key"],
+                secret_key=config["secret-key"],
+            )
