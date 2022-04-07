@@ -6,6 +6,7 @@ import logging
 from random import choices
 from string import ascii_uppercase, digits
 from base64 import b64encode
+from hashlib import sha256
 
 from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
@@ -26,7 +27,8 @@ class Operator(CharmBase):
         super().__init__(*args)
         self.log = logging.getLogger()
 
-        self._stored.set_default(secret_key=_gen_pass())
+        # Random salt used for hashing config
+        self._stored.set_default(hash_salt=_gen_pass())
 
         self.image = OCIImageResource(self, "oci-image")
 
@@ -53,8 +55,10 @@ class Operator(CharmBase):
             self.model.unit.status = error.status
             return
 
-        secret_key = self.model.config["secret-key"] or self._stored.secret_key
+        secret_key = self._get_secret_key()
         self._send_info(interfaces, secret_key)
+
+        configmap_hash = self._generate_config_hash()
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
         self.model.pod.set_spec(
@@ -79,6 +83,11 @@ class Operator(CharmBase):
                             "minio-secret": {
                                 "secret": {"name": f"{self.model.app.name}-secret"}
                             },
+                            # This hash forces a restart for pods whenever we change the config.
+                            # This would ideally be a spec.template.metadata.annotation rather
+                            # than an environment variable, but we cannot use that using podspec.
+                            # (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
+                            "configmap-hash": configmap_hash,
                         },
                     }
                 ],
@@ -135,6 +144,17 @@ class Operator(CharmBase):
                 }
             )
 
+    def _generate_config_hash(self):
+        """Returns a hash of the current config state"""
+        # Add a randomly generated salt to the config to make it hard to reverse engineer the
+        # secret-key from the password.
+        salt = self._stored.hash_salt
+        all_config = tuple(
+            str(self.model.config[name]) for name in sorted(self.model.config.keys())
+        ) + (salt,)
+        config_hash = sha256(".".join(all_config).encode("utf-8"))
+        return config_hash.hexdigest()
+
     def _get_minio_args(self):
         model_mode = self.model.config["mode"]
         if model_mode == "server":
@@ -164,6 +184,23 @@ class Operator(CharmBase):
                 "configuration. Possible values: s3, azure",
                 BlockedStatus,
             )
+
+    def _get_secret_key(self):
+        """Returns the secret key set by config, else returns the randomly generated secret"""
+        config_secret = self.model.config["secret-key"]
+        if config_secret != "":
+            # Use secret specified in config
+            secret = config_secret
+        else:
+            try:
+                # Try to use a randomly generated default key from the past
+                secret = self._stored.secret_key
+            except AttributeError:
+                # Create and store a randomly generated default key to reuse in future
+                secret = _gen_pass()
+                self._stored.set_default(secret_key=secret)
+
+        return secret
 
     def _with_console_address(self, minio_args):
         console_port = str(self.model.config["console-port"])
