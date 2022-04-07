@@ -7,6 +7,7 @@ from random import choices
 from string import ascii_uppercase, digits
 from base64 import b64encode
 from hashlib import sha256
+from kubernetes import client
 
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
@@ -107,6 +108,13 @@ class Operator(CharmBase):
                             "configmap-hash": configmap_hash,
                             "MINIO_PROMETHEUS_AUTH_TYPE": "public",
                         },
+                        "volumeConfig": [
+                            {
+                                "name": "minio-ca-bundle",
+                                "mountPath": "/root/.minio/certs/",
+                                "files": self._get_ssl_config(),
+                            },
+                        ],
                     }
                 ],
                 "kubernetesResources": {
@@ -223,6 +231,37 @@ class Operator(CharmBase):
     def _with_console_address(self, minio_args):
         console_port = str(self.model.config["console-port"])
         return [*minio_args, "--console-address", ":" + console_port]
+
+    def _get_ssl_config(self):
+        v1 = client.CoreV1Api()
+        self.model.unit.status = MaintenanceStatus(
+            f"Waiting for {self.config['ssl-secret-name']} to be created"
+        )
+        try:
+            ssl_bundle = v1.read_namespaced_secret(
+                name=self.model.config["ssl-secret-name"], namespace=self.model.name
+            ).data
+            return [
+                {
+                    "path": "private.key",
+                    "content": ssl_bundle["PRIVATE_KEY"],
+                },
+                {
+                    "path": "public.crt",
+                    "content": ssl_bundle["PUBLIC_CRT"],
+                },
+                {"path": "CA/root.cert", "content": ssl_bundle["ROOT_CERT"]},
+            ]
+        except client.rest.ApiException as err:
+            self.log.info(err)
+            self.model.unit.status = ActiveStatus()
+            return None
+        except KeyError as err:
+            self.log.info(err)
+            self.model.unit.status = BlockedStatus(
+                "SSL secret found with incorrect keys."
+            )
+            return None
 
 
 def _gen_pass() -> str:
