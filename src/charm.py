@@ -231,7 +231,7 @@ class Operator(CharmBase):
     def _get_ssl_config(self):
         v1 = client.CoreV1Api()
         self.model.unit.status = MaintenanceStatus(
-            f"Waiting for {self.config['ssl-secret-name']} to be created"
+            "Waiting for SSL secret to be created"
         )
         try:
             ssl_bundle = v1.read_namespaced_secret(
