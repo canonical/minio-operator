@@ -109,11 +109,7 @@ class Operator(CharmBase):
                             "MINIO_PROMETHEUS_AUTH_TYPE": "public",
                         },
                         "volumeConfig": [
-                            {
-                                "name": "minio-ca-bundle",
-                                "mountPath": "/root/.minio/certs/",
-                                "files": self._get_ssl_config(),
-                            },
+                            self._get_ssl_config(),
                         ],
                     }
                 ],
@@ -241,17 +237,25 @@ class Operator(CharmBase):
             ssl_bundle = v1.read_namespaced_secret(
                 name=self.model.config["ssl-secret-name"], namespace=self.model.name
             ).data
-            return [
-                {
-                    "path": "private.key",
-                    "content": ssl_bundle["PRIVATE_KEY"],
+            return {
+                "name": self.model.config["ssl-secret-name"],
+                "mountPath": "/root/.minio/certs/",
+                "secret": {
+                    "name": self.model.config["ssl-secret-name"],
+                    "defaultMode": 511,
+                    "files": [
+                        {
+                            "path": "private.key",
+                            "key": "PRIVATE_KEY",
+                        },
+                        {
+                            "path": "public.crt",
+                            "key": "PUBLIC_CRT",
+                        },
+                        {"path": "CA/root.cert", "key": "ROOT_CERT"},
+                    ],
                 },
-                {
-                    "path": "public.crt",
-                    "content": ssl_bundle["PUBLIC_CRT"],
-                },
-                {"path": "CA/root.cert", "content": ssl_bundle["ROOT_CERT"]},
-            ]
+            }
         except client.rest.ApiException as err:
             self.log.info(err)
             self.model.unit.status = ActiveStatus()
