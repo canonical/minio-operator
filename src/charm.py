@@ -36,7 +36,6 @@ class Operator(CharmBase):
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
-            relation_name="monitoring",
             jobs=[
                 {
                     "job_name": "minio_metrics",
@@ -56,9 +55,6 @@ class Operator(CharmBase):
             self.on.upgrade_charm,
             self.on["object-storage"].relation_changed,
             self.on["object-storage"].relation_joined,
-            self.on["monitoring"].relation_changed,
-            self.on["monitoring"].relation_broken,
-            self.on["monitoring"].relation_departed,
         ]:
             self.framework.observe(event, self.main)
 
@@ -239,9 +235,9 @@ class CheckFailed(Exception):
     def __init__(self, msg, status_type=None):
         super().__init__()
 
-        self.msg = msg
+        self.msg = str(msg)
         self.status_type = status_type
-        self.status = status_type(msg)
+        self.status = status_type(self.msg)
 
 
 if __name__ == "__main__":
