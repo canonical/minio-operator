@@ -271,8 +271,8 @@ class Operator(CharmBase):
 
     def _has_ssl_config(self):
         return (
-            self.model.config["ssl-private-key"] != ""
-            and self.model.config["ssl-public-key"] != ""
+            self.model.config["ssl-key"] != ""
+            and self.model.config["ssl-cert"] != ""
             and self.model.config["ssl-root-ca"] != ""
         )
 
