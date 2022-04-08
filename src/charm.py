@@ -126,12 +126,14 @@ class Operator(CharmBase):
             },
         }
 
-        ssl_volume_config = self._get_ssl_volume_config()
-        ssl_secret = self._get_ssl_secret()
-
-        if ssl_volume_config is not None and ssl_secret is not None:
-            spec["containers"][0]["volumeConfig"].append(ssl_volume_config)
-            spec["kubernetesResources"]["secrets"].append(ssl_secret)
+        self.model.unit.status = MaintenanceStatus("Checking for SSL secret.")
+        if self._has_ssl_config():
+            spec["containers"][0]["volumeConfig"].append(self._get_ssl_volume_config())
+            spec["kubernetesResources"]["secrets"].append(self._get_ssl_secret())
+        else:
+            self.log.info(
+                "SSL: No secret specified in charm config.  Proceeding without SSL."
+            )
 
         self.model.pod.set_spec(spec)
         self.model.unit.status = ActiveStatus()
@@ -233,46 +235,39 @@ class Operator(CharmBase):
         return [*minio_args, "--console-address", ":" + console_port]
 
     def _get_ssl_volume_config(self):
-        self.model.unit.status = MaintenanceStatus("Checking for SSL secret.")
-        if self._has_ssl_config():
-            return {
+        return {
+            "name": "minio-ssl",
+            "mountPath": "/root/.minio/certs/",
+            "secret": {
                 "name": "minio-ssl",
-                "mountPath": "/root/.minio/certs/",
-                "secret": {
-                    "name": "minio-ssl",
-                    "defaultMode": 511,
-                    "files": [
-                        {
-                            "path": "private.key",
-                            "key": "PRIVATE_KEY",
-                        },
-                        {
-                            "path": "public.crt",
-                            "key": "PUBLIC_CRT",
-                        },
-                        {"path": "CA/root.cert", "key": "ROOT_CERT"},
-                    ],
-                },
-            }
-        else:
-            self.log.info(
-                "SSL: No secret specified in charm config.  Proceeding without SSL."
-            )
+                "defaultMode": 511,
+                "files": [
+                    {
+                        "path": "private.key",
+                        "key": "PRIVATE_KEY",
+                    },
+                    {
+                        "path": "public.crt",
+                        "key": "PUBLIC_CRT",
+                    },
+                    {"path": "CA/root.cert", "key": "ROOT_CERT"},
+                ],
+            },
+        }
 
     def _get_ssl_secret(self):
-        if self._has_ssl_config():
-            return {
-                "name": "minio-ssl",
-                "type": "Opaque",
-                "data": {
-                    k: b64encode(v.encode("utf-8")).decode("utf-8")
-                    for k, v in {
-                        "PRIVATE_KEY": self.model.config["ssl-key"],
-                        "PUBLIC_CRT": self.model.config["ssl-cert"],
-                        "ROOT_CERT": self.model.config["ssl-root-ca"],
-                    }.items()
-                },
-            }
+        return {
+            "name": "minio-ssl",
+            "type": "Opaque",
+            "data": {
+                k: b64encode(v.encode("utf-8")).decode("utf-8")
+                for k, v in {
+                    "PRIVATE_KEY": self.model.config["ssl-key"],
+                    "PUBLIC_CRT": self.model.config["ssl-cert"],
+                    "ROOT_CERT": self.model.config["ssl-root-ca"],
+                }.items()
+            },
+        }
 
     def _has_ssl_config(self):
         return (
