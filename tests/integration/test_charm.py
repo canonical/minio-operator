@@ -10,7 +10,6 @@ import requests
 import json
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_delay, wait_exponential
-import yaml
 
 log = logging.getLogger(__name__)
 
