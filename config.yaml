@@ -30,7 +30,15 @@ options:
     type: string
     default: ''
     description: "Service endpoint of gateway storage service. This value is optional when using S3 or Azure public API endpoints"
-  ssl-secret-name:
+  ssl-root-ca:
     type: string
     default: ''
-    description: "Name of kubernetes secret that holds the certificate information"
+    description: "Root CA"
+  ssl-cert:
+    type: string
+    default: ''
+    description: "Certificate"
+  ssl-key:
+    type: string
+    default: ''
+    description: "Private key"

@@ -7,7 +7,6 @@ from random import choices
 from string import ascii_uppercase, digits
 from base64 import b64encode
 from hashlib import sha256
-from kubernetes import client
 
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
@@ -79,57 +78,62 @@ class Operator(CharmBase):
         configmap_hash = self._generate_config_hash()
 
         self.model.unit.status = MaintenanceStatus("Setting pod spec")
-        self.model.pod.set_spec(
-            {
-                "version": 3,
-                "containers": [
-                    {
-                        "name": "minio",
-                        "args": minio_args,
-                        "imageDetails": image_details,
-                        "ports": [
-                            {
-                                "name": "minio",
-                                "containerPort": int(self.model.config["port"]),
-                            },
-                            {
-                                "name": "console",
-                                "containerPort": int(self.model.config["console-port"]),
-                            },
-                        ],
-                        "envConfig": {
-                            "minio-secret": {
-                                "secret": {"name": f"{self.model.app.name}-secret"}
-                            },
-                            # This hash forces a restart for pods whenever we change the config.
-                            # This would ideally be a spec.template.metadata.annotation rather
-                            # than an environment variable, but we cannot use that using podspec.
-                            # (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
-                            "configmap-hash": configmap_hash,
-                            "MINIO_PROMETHEUS_AUTH_TYPE": "public",
-                        },
-                        "volumeConfig": [
-                            self._get_ssl_config(),
-                        ],
-                    }
-                ],
-                "kubernetesResources": {
-                    "secrets": [
+
+        spec = {
+            "version": 3,
+            "containers": [
+                {
+                    "name": "minio",
+                    "args": minio_args,
+                    "imageDetails": image_details,
+                    "ports": [
                         {
-                            "name": f"{self.model.app.name}-secret",
-                            "type": "Opaque",
-                            "data": {
-                                k: b64encode(v.encode("utf-8")).decode("utf-8")
-                                for k, v in {
-                                    "MINIO_ACCESS_KEY": self.model.config["access-key"],
-                                    "MINIO_SECRET_KEY": secret_key,
-                                }.items()
-                            },
-                        }
-                    ]
-                },
-            }
-        )
+                            "name": "minio",
+                            "containerPort": int(self.model.config["port"]),
+                        },
+                        {
+                            "name": "console",
+                            "containerPort": int(self.model.config["console-port"]),
+                        },
+                    ],
+                    "envConfig": {
+                        "minio-secret": {
+                            "secret": {"name": f"{self.model.app.name}-secret"}
+                        },
+                        # This hash forces a restart for pods whenever we change the config.
+                        # This would ideally be a spec.template.metadata.annotation rather
+                        # than an environment variable, but we cannot use that using podspec.
+                        # (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
+                        "configmap-hash": configmap_hash,
+                    },
+                    "volumeConfig": [],
+                }
+            ],
+            "kubernetesResources": {
+                "secrets": [
+                    {
+                        "name": f"{self.model.app.name}-secret",
+                        "type": "Opaque",
+                        "data": {
+                            k: b64encode(v.encode("utf-8")).decode("utf-8")
+                            for k, v in {
+                                "MINIO_ACCESS_KEY": self.model.config["access-key"],
+                                "MINIO_SECRET_KEY": secret_key,
+                            }.items()
+                        },
+                    },
+                ]
+            },
+        }
+
+        ssl_volume_config = self._get_ssl_volume_config()
+        ssl_secret = self._get_ssl_secret()
+
+        if ssl_volume_config is not None and ssl_secret is not None:
+            spec["containers"][0]["volumeConfig"].append(ssl_volume_config)
+            spec["kubernetesResources"]["secrets"].append(ssl_secret)
+
+        self.model.pod.set_spec(spec)
         self.model.unit.status = ActiveStatus()
 
     def _check_leader(self):
@@ -228,20 +232,14 @@ class Operator(CharmBase):
         console_port = str(self.model.config["console-port"])
         return [*minio_args, "--console-address", ":" + console_port]
 
-    def _get_ssl_config(self):
-        v1 = client.CoreV1Api()
-        self.model.unit.status = MaintenanceStatus(
-            "Waiting for SSL secret to be created"
-        )
-        try:
-            ssl_bundle = v1.read_namespaced_secret(
-                name=self.model.config["ssl-secret-name"], namespace=self.model.name
-            ).data
+    def _get_ssl_volume_config(self):
+        self.model.unit.status = MaintenanceStatus("Checking for SSL secret.")
+        if self._has_ssl_config():
             return {
-                "name": self.model.config["ssl-secret-name"],
+                "name": "minio-ssl",
                 "mountPath": "/root/.minio/certs/",
                 "secret": {
-                    "name": self.model.config["ssl-secret-name"],
+                    "name": "minio-ssl",
                     "defaultMode": 511,
                     "files": [
                         {
@@ -256,16 +254,32 @@ class Operator(CharmBase):
                     ],
                 },
             }
-        except client.rest.ApiException as err:
-            self.log.info(err)
-            self.model.unit.status = ActiveStatus()
-            return None
-        except KeyError as err:
-            self.log.info(err)
-            self.model.unit.status = BlockedStatus(
-                "SSL secret found with incorrect keys."
+        else:
+            self.log.info(
+                "SSL: No secret specified in charm config.  Proceeding without SSL."
             )
-            return None
+
+    def _get_ssl_secret(self):
+        if self._has_ssl_config():
+            return {
+                "name": "minio-ssl",
+                "type": "Opaque",
+                "data": {
+                    k: b64encode(v.encode("utf-8")).decode("utf-8")
+                    for k, v in {
+                        "PRIVATE_KEY": self.model.config["ssl-key"],
+                        "PUBLIC_CRT": self.model.config["ssl-cert"],
+                        "ROOT_CERT": self.model.config["ssl-root-ca"],
+                    }.items()
+                },
+            }
+
+    def _has_ssl_config(self):
+        return (
+            self.model.config["ssl-private-key"] != ""
+            and self.model.config["ssl-public-key"] != ""
+            and self.model.config["ssl-root-ca"] != ""
+        )
 
 
 def _gen_pass() -> str:
