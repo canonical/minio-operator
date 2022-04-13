@@ -8,6 +8,8 @@ from string import ascii_uppercase, digits
 from base64 import b64encode
 from hashlib import sha256
 
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
+from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.framework import StoredState
@@ -31,6 +33,21 @@ class Operator(CharmBase):
         self._stored.set_default(hash_salt=_gen_pass())
 
         self.image = OCIImageResource(self, "oci-image")
+
+        self.prometheus_provider = MetricsEndpointProvider(
+            charm=self,
+            jobs=[
+                {
+                    "job_name": "minio_metrics",
+                    "scrape_interval": "30s",
+                    "metrics_path": "/minio/v2/metrics/cluster",
+                    "static_configs": [
+                        {"targets": ["*:{}".format(self.config["port"])]}
+                    ],
+                }
+            ],
+        )
+        self.dashboard_provider = GrafanaDashboardProvider(self)
 
         for event in [
             self.on.config_changed,
@@ -88,6 +105,7 @@ class Operator(CharmBase):
                             # than an environment variable, but we cannot use that using podspec.
                             # (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
                             "configmap-hash": configmap_hash,
+                            "MINIO_PROMETHEUS_AUTH_TYPE": "public",
                         },
                     }
                 ],
@@ -217,9 +235,9 @@ class CheckFailed(Exception):
     def __init__(self, msg, status_type=None):
         super().__init__()
 
-        self.msg = msg
+        self.msg = str(msg)
         self.status_type = status_type
-        self.status = status_type(msg)
+        self.status = status_type(self.msg)
 
 
 if __name__ == "__main__":

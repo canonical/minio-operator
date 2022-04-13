@@ -7,3 +7,4 @@ flake8-copyright<0.3
 pytest
 pyyaml
 tenacity<8.1
+requests

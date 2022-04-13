@@ -1,6 +1,7 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-ops==1.2.0
+ops==1.4.0
 oci-image
 serialized-data-interface<0.4
+pytest-mock
