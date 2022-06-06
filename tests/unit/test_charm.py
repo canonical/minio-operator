@@ -310,6 +310,8 @@ def test_minio_console_port_args(harness):
     assert pod_spec[0]["containers"][0]["args"] == [
         "server",
         "/data",
+        "--certs-dir",
+        "minio/.minio/certs",
         "--console-address",
         ":9999",
     ]
