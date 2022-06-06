@@ -181,6 +181,8 @@ def test_server_minio_args(harness):
     assert pod_spec[0]["containers"][0]["args"] == [
         "server",
         "/data",
+        "--certs-dir",
+        "minio/.minio/certs",
         "--console-address",
         ":9001",
     ]
