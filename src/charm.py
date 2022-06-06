@@ -5,7 +5,7 @@
 import logging
 from random import choices
 from string import ascii_uppercase, digits
-from base64 import b64encode
+from base64 import b64encode, b64decode
 from hashlib import sha256
 
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
@@ -186,7 +186,7 @@ class Operator(CharmBase):
     def _get_minio_args(self):
         model_mode = self.model.config["mode"]
         if model_mode == "server":
-            return self._with_console_address(["server", "/data"])
+            return self._with_console_address(["server", "/data" "--certs-dir" "/minio/.minio/certs"])
         elif model_mode == "gateway":
             return self._with_console_address(self._get_minio_args_gateway())
         else:
@@ -237,7 +237,7 @@ class Operator(CharmBase):
     def _get_ssl_volume_config(self):
         return {
             "name": "minio-ssl",
-            "mountPath": "/root/.minio/certs/",
+            "mountPath": "/minio/.minio/certs/",
             "secret": {
                 "name": "minio-ssl",
                 "defaultMode": 511,
@@ -262,9 +262,9 @@ class Operator(CharmBase):
             "data": {
                 k: b64encode(v.encode("utf-8")).decode("utf-8")
                 for k, v in {
-                    "PRIVATE_KEY": self.model.config["ssl-key"],
-                    "PUBLIC_CRT": self.model.config["ssl-cert"],
-                    "ROOT_CERT": self.model.config["ssl-root-ca"],
+                    "PRIVATE_KEY": b64decode(self.model.config["ssl-key"]),
+                    "PUBLIC_CRT": b64decode(self.model.config["ssl-cert"]),
+                    "ROOT_CERT": b64decode(self.model.config["ssl-ca"]),
                 }.items()
             },
         }
@@ -273,7 +273,6 @@ class Operator(CharmBase):
         return (
             self.model.config["ssl-key"] != ""
             and self.model.config["ssl-cert"] != ""
-            and self.model.config["ssl-root-ca"] != ""
         )
 
 
