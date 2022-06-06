@@ -30,15 +30,15 @@ options:
     type: string
     default: ''
     description: "Service endpoint of gateway storage service. This value is optional when using S3 or Azure public API endpoints"
-  ssl-root-ca:
+  ssl-ca:
     type: string
     default: ''
-    description: "Root CA"
+    description: "Base64 encoded certificate authority for untrusted certificate chains"
   ssl-cert:
     type: string
     default: ''
-    description: "Certificate"
+    description: "Base64 encoded SSL certificate."
   ssl-key:
     type: string
     default: ''
-    description: "Private key"
+    description: "Base64 encoded SSL key."
