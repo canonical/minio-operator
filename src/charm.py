@@ -187,7 +187,7 @@ class Operator(CharmBase):
         model_mode = self.model.config["mode"]
         if model_mode == "server":
             return self._with_console_address(
-                ["server", "/data" "--certs-dir" "/minio/.minio/certs"]
+                ["server", "/data", "--certs-dir", "/minio/.minio/certs"]
             )
         elif model_mode == "gateway":
             return self._with_console_address(self._get_minio_args_gateway())
