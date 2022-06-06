@@ -182,7 +182,7 @@ def test_server_minio_args(harness):
         "server",
         "/data",
         "--certs-dir",
-        "minio/.minio/certs",
+        "/minio/.minio/certs",
         "--console-address",
         ":9001",
     ]
@@ -311,7 +311,7 @@ def test_minio_console_port_args(harness):
         "server",
         "/data",
         "--certs-dir",
-        "minio/.minio/certs",
+        "/minio/.minio/certs",
         "--console-address",
         ":9999",
     ]
