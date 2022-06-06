@@ -10,6 +10,7 @@ on:
 jobs:
 
   publish-charm:
+    if: github.repository_owner == 'canonical'
     name: Publish Charm
     runs-on: ubuntu-latest
     steps:
