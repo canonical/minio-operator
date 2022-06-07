@@ -29,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     # Only publish to charmhub if we are pushing to a special branch or running PRs from something named `branch/*`
     if: ((github.event_name == 'push') ||  (startsWith( github.head_ref, 'branch/' ))) && (github.repository_owner == 'canonical') && (github.event.pull_request.merged == true)
+    needs: lib-check
     steps:
       - name: Checkout
         uses: actions/checkout@v2
