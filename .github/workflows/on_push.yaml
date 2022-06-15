@@ -16,11 +16,11 @@ on:
 
 jobs:
 
-  tests:
-    name: Run Tests
-    uses: ./.github/workflows/integrate.yaml
-    secrets:
-      charmcraft-credentials: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
+  #  tests:
+  #    name: Run Tests
+  #    uses: ./.github/workflows/integrate.yaml
+  #    secrets:
+  #      charmcraft-credentials: "${{ secrets.CHARMCRAFT_CREDENTIALS }}"
 
   # publish runs in series with tests, and only publishes if tests passes
   publish-charm:
