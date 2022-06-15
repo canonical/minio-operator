@@ -12,7 +12,6 @@ jobs:
   lib-check:
     name: Check libraries
     runs-on: ubuntu-latest
-    if: (github.repository_owner == 'gustavosr98')
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -27,7 +26,6 @@ jobs:
   publish-charm:
     name: Publish Charm
     runs-on: ubuntu-latest
-    if: (github.repository_owner == 'gustavosr98')
     needs: lib-check
     steps:
       - name: Checkout
