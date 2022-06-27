@@ -9,21 +9,6 @@ on:
 
 jobs:
 
-  lib-check:
-    name: Check libraries
-    runs-on: ubuntu-latest
-    if: github.repository_owner == 'canonical'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Check libs
-        uses: canonical/charming-actions/check-libraries@1.0.3
-        with:
-          credentials: "${{ secrets.charmcraft-credentials }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
   publish-charm:
     name: Publish Charm
     runs-on: ubuntu-latest
