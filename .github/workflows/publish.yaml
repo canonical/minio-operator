@@ -12,7 +12,7 @@ jobs:
   publish-charm:
     name: Publish Charm
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'canonical'
+    if: github.actor == 'canonical'
     needs: lib-check
     steps:
       - name: Checkout
