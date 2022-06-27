@@ -12,7 +12,7 @@ jobs:
   lib-check:
     name: Check libraries
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'canonical'
+    if: github.actor == 'canonical'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
