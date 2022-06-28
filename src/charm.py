@@ -106,7 +106,21 @@ class Operator(CharmBase):
                         # (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
                         "configmap-hash": configmap_hash,
                     },
-                    "volumeConfig": [],
+                    "volumeConfig": [
+                        {
+                            "name": "ssl-ca",
+                            "mountPath": "/minio/.minio/certs/CAs",
+                            "emptyDir": {},
+                        },
+                    ],
+                    "kubernetes": {
+                        "securityContext": {
+                            "runAsNonRoot": False,
+                            "privileged": True,
+                            "readOnlyRootFilesystem": False,
+                            # "runAsUser":1000,
+                        },
+                    },
                 }
             ],
             "kubernetesResources": {
@@ -237,38 +251,39 @@ class Operator(CharmBase):
         return [*minio_args, "--console-address", ":" + console_port]
 
     def _get_ssl_volume_config(self):
+        files = [
+            {
+                "path": "private.key",
+                "key": "PRIVATE_KEY",
+            },
+            {
+                "path": "public.crt",
+                "key": "PUBLIC_CRT",
+            },
+        ]
+        if self.model.config["ssl-ca"] is not None:
+            files.append({"path": "CAs/root.cert", "key": "ROOT_CERT"})
         return {
             "name": "minio-ssl",
             "mountPath": "/minio/.minio/certs/",
             "secret": {
                 "name": "minio-ssl",
                 "defaultMode": 511,
-                "files": [
-                    {
-                        "path": "private.key",
-                        "key": "PRIVATE_KEY",
-                    },
-                    {
-                        "path": "public.crt",
-                        "key": "PUBLIC_CRT",
-                    },
-                    {"path": "CA/root.cert", "key": "ROOT_CERT"},
-                ],
+                "files": files,
             },
         }
 
     def _get_ssl_secret(self):
+        data = {
+            "PRIVATE_KEY": self.model.config["ssl-key"],
+            "PUBLIC_CRT": self.model.config["ssl-cert"],
+        }
+        if self.model.config["ssl-ca"] is not None:
+            data["ROOT_CERT"] = b64decode(self.model.config["ssl-ca"])
         return {
             "name": "minio-ssl",
             "type": "Opaque",
-            "data": {
-                k: b64encode(v.encode("utf-8")).decode("utf-8")
-                for k, v in {
-                    "PRIVATE_KEY": b64decode(self.model.config["ssl-key"]),
-                    "PUBLIC_CRT": b64decode(self.model.config["ssl-cert"]),
-                    "ROOT_CERT": b64decode(self.model.config["ssl-ca"]),
-                }.items()
-            },
+            "data": data,
         }
 
     def _has_ssl_config(self):
