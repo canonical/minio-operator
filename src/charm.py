@@ -261,7 +261,7 @@ class Operator(CharmBase):
                 "key": "PUBLIC_CRT",
             },
         ]
-        if self.model.config["ssl-ca"] is not None:
+        if self.model.config["ssl-ca"] != "":
             files.append({"path": "CAs/root.cert", "key": "ROOT_CERT"})
         return {
             "name": "minio-ssl",
@@ -278,7 +278,7 @@ class Operator(CharmBase):
             "PRIVATE_KEY": self.model.config["ssl-key"],
             "PUBLIC_CRT": self.model.config["ssl-cert"],
         }
-        if self.model.config["ssl-ca"] is not None:
+        if self.model.config["ssl-ca"] != "":
             data["ROOT_CERT"] = b64decode(self.model.config["ssl-ca"])
         return {
             "name": "minio-ssl",
