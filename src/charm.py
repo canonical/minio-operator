@@ -279,7 +279,7 @@ class Operator(CharmBase):
             "PUBLIC_CRT": self.model.config["ssl-cert"],
         }
         if self.model.config["ssl-ca"] != "":
-            data["ROOT_CERT"] = b64decode(self.model.config["ssl-ca"])
+            data["ROOT_CERT"] = self.model.config["ssl-ca"]
         return {
             "name": "minio-ssl",
             "type": "Opaque",
