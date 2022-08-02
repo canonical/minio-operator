@@ -5,7 +5,7 @@
 import logging
 from random import choices
 from string import ascii_uppercase, digits
-from base64 import b64encode, b64decode
+from base64 import b64encode
 from hashlib import sha256
 
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
@@ -146,7 +146,7 @@ class Operator(CharmBase):
             spec["kubernetesResources"]["secrets"].append(self._get_ssl_secret())
         else:
             self.log.info(
-                "SSL: No secret specified in charm config.  Proceeding without SSL."
+                "SSL: No secret specified in charm config. Proceeding without SSL."
             )
 
         self.model.pod.set_spec(spec)
