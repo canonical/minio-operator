@@ -3,8 +3,9 @@
 
 flake8
 black
-flake8-copyright<0.3
+git+https://github.com/savoirfairelinux/flake8-copyright.git@b84cae576875d5d73436a372c1535fbfb0f89a95
 pytest
+pytest-mock
 pyyaml
 tenacity<8.1
 requests
