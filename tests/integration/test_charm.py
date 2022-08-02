@@ -204,15 +204,19 @@ async def test_refresh_credentials(ops_test: OpsTest):
 
 async def test_deploy_with_prometheus_and_grafana(ops_test):
     scrape_config = {"scrape_interval": "30s"}
-    await ops_test.model.deploy(PROMETHEUS, channel="latest/beta")
-    await ops_test.model.deploy(GRAFANA, channel="latest/beta")
+    await ops_test.model.deploy(PROMETHEUS, channel="latest/beta", trust=True)
+    await ops_test.model.deploy(GRAFANA, channel="latest/beta", trust=True)
     await ops_test.model.deploy(
         PROMETHEUS_SCRAPE, channel="latest/beta", config=scrape_config
     )
     await ops_test.model.add_relation(APP_NAME, PROMETHEUS_SCRAPE)
     await ops_test.model.add_relation(PROMETHEUS, PROMETHEUS_SCRAPE)
-    await ops_test.model.add_relation(PROMETHEUS, GRAFANA)
-    await ops_test.model.add_relation(APP_NAME, GRAFANA)
+    await ops_test.model.add_relation(
+        f"{PROMETHEUS}:grafana-dashboard", f"{GRAFANA}:grafana-dashboard"
+    )
+    await ops_test.model.add_relation(
+        f"{APP_NAME}:grafana-dashboard", f"{GRAFANA}:grafana-dashboard"
+    )
 
     await ops_test.model.wait_for_idle(
         [APP_NAME, PROMETHEUS, GRAFANA, PROMETHEUS_SCRAPE], status="active"
