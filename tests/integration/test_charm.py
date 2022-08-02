@@ -210,7 +210,9 @@ async def test_deploy_with_prometheus_and_grafana(ops_test):
         PROMETHEUS_SCRAPE, channel="latest/beta", config=scrape_config
     )
     await ops_test.model.add_relation(APP_NAME, PROMETHEUS_SCRAPE)
-    await ops_test.model.add_relation(PROMETHEUS, PROMETHEUS_SCRAPE)
+    await ops_test.model.add_relation(
+        f"{PROMETHEUS}:metrics-endpoint", f"{PROMETHEUS_SCRAPE}:metrics-endpoint"
+    )
     await ops_test.model.add_relation(
         f"{PROMETHEUS}:grafana-dashboard", f"{GRAFANA}:grafana-dashboard"
     )
