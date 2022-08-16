@@ -4,12 +4,13 @@
 import logging
 from pathlib import Path
 
+import json
+import requests
 import pytest
 import yaml
-import requests
-import json
+
 from pytest_operator.plugin import OpsTest
-from tenacity import Retrying, stop_after_delay, wait_exponential
+from tenacity import Retrying, stop_after_delay, stop_after_attempt, wait_exponential
 
 log = logging.getLogger(__name__)
 
@@ -202,45 +203,62 @@ async def test_refresh_credentials(ops_test: OpsTest):
             )
 
 
-async def test_deploy_with_prometheus_and_grafana(ops_test):
+async def test_prometheus_grafana_integration(ops_test: OpsTest):
+    """Deploy prometheus, grafana and required relations, then test the metrics."""
+    prometheus = "prometheus-k8s"
+    grafana = "grafana-k8s"
+    prometheus_scrape = "prometheus-scrape-config-k8s"
     scrape_config = {"scrape_interval": "30s"}
-    await ops_test.model.deploy(PROMETHEUS, channel="latest/beta", trust=True)
-    await ops_test.model.deploy(GRAFANA, channel="latest/beta", trust=True)
+
+    # Deploy and relate prometheus
+    await ops_test.model.deploy(prometheus, channel="latest/edge", trust=True)
+    await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
     await ops_test.model.deploy(
-        PROMETHEUS_SCRAPE, channel="latest/beta", config=scrape_config
-    )
-    await ops_test.model.add_relation(APP_NAME, PROMETHEUS_SCRAPE)
-    await ops_test.model.add_relation(
-        f"{PROMETHEUS}:metrics-endpoint", f"{PROMETHEUS_SCRAPE}:metrics-endpoint"
-    )
-    await ops_test.model.add_relation(
-        f"{PROMETHEUS}:grafana-dashboard", f"{GRAFANA}:grafana-dashboard"
-    )
-    await ops_test.model.add_relation(
-        f"{APP_NAME}:grafana-dashboard", f"{GRAFANA}:grafana-dashboard"
+        prometheus_scrape, channel="latest/beta", config=scrape_config
     )
 
-    await ops_test.model.wait_for_idle(
-        [APP_NAME, PROMETHEUS, GRAFANA, PROMETHEUS_SCRAPE], status="active"
+    await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
+    await ops_test.model.add_relation(
+        f"{prometheus}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+    )
+    await ops_test.model.add_relation(
+        f"{APP_NAME}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+    )
+    await ops_test.model.add_relation(
+        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
     )
 
+    await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
-async def test_correct_observability_setup(ops_test):
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][PROMETHEUS]["units"][f"{PROMETHEUS}/0"][
+    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"][
         "address"
     ]
-    r = requests.get(
-        f'http://{prometheus_unit_ip}:9090/api/v1/query?query=up{{juju_application="{APP_NAME}"}}'
-    )
-    response = json.loads(r.content.decode("utf-8"))
-    assert response["status"] == "success"
-    assert len(response["data"]["result"]) == len(
-        ops_test.model.applications[APP_NAME].units
-    )
+    log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
-    response_metric = response["data"]["result"][0]["metric"]
-    assert response_metric["juju_application"] == APP_NAME
-    assert response_metric["juju_charm"] == APP_NAME
-    assert response_metric["juju_model"] == ops_test.model_name
-    assert response_metric["juju_unit"] == f"{APP_NAME}/0"
+    for attempt in retry_for_5_attempts:
+        log.info(
+            f"Testing prometheus deployment (attempt "
+            f"{attempt.retry_state.attempt_number})"
+        )
+        with attempt:
+            r = requests.get(
+                f"http://{prometheus_unit_ip}:9090/api/v1/query?"
+                f'query=up{{juju_application="{APP_NAME}"}}'
+            )
+            response = json.loads(r.content.decode("utf-8"))
+            response_status = response["status"]
+            log.info(f"Response status is {response_status}")
+            assert response_status == "success"
+
+            response_metric = response["data"]["result"][0]["metric"]
+            assert response_metric["juju_application"] == APP_NAME
+            assert response_metric["juju_model"] == ops_test.model_name
+
+
+# Helper to retry calling a function over 30 seconds or 5 attempts
+retry_for_5_attempts = Retrying(
+    stop=(stop_after_attempt(5) | stop_after_delay(30)),
+    wait=wait_exponential(multiplier=1, min=1, max=10),
+    reraise=True,
+)
