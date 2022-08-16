@@ -19,7 +19,7 @@ def harness():
 
 def test_not_leader(harness):
     harness.begin_with_initial_hooks()
-    assert harness.charm.model.unit.status == ActiveStatus("")
+    assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
 
 
 def test_missing_image(harness):
