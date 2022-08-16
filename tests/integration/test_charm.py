@@ -204,8 +204,8 @@ async def test_refresh_credentials(ops_test: OpsTest):
 
 async def test_deploy_with_prometheus_and_grafana(ops_test):
     scrape_config = {"scrape_interval": "30s"}
-    await ops_test.model.deploy(PROMETHEUS, channel="latest/beta", trust=True)
-    await ops_test.model.deploy(GRAFANA, channel="latest/beta", trust=True)
+    await ops_test.model.deploy(PROMETHEUS, channel="latest/edge", trust=True)
+    await ops_test.model.deploy(GRAFANA, channel="latest/edge", trust=True)
     await ops_test.model.deploy(
         PROMETHEUS_SCRAPE, channel="latest/beta", config=scrape_config
     )
