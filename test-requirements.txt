@@ -4,6 +4,7 @@
 flake8==4.0.1
 black
 flake8-copyright<0.3
+juju==3.0.1
 pytest
 pytest-mock
 pyyaml
