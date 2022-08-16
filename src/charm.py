@@ -53,6 +53,7 @@ class Operator(CharmBase):
             self.on.config_changed,
             self.on.install,
             self.on.upgrade_charm,
+            self.on.leader_elected,
             self.on["object-storage"].relation_changed,
             self.on["object-storage"].relation_joined,
         ]:
@@ -155,7 +156,7 @@ class Operator(CharmBase):
     def _check_leader(self):
         if not self.unit.is_leader():
             self.log.info("Not a leader, skipping set_pod_spec")
-            raise CheckFailed("", ActiveStatus)
+            raise CheckFailed("Waiting for leadership", WaitingStatus)
 
     def _get_interfaces(self):
         try:
