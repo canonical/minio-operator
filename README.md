@@ -74,3 +74,7 @@ credential error will be visible in container logs.
 
 For more information, see: https://docs.min.io/docs/minio-gateway-for-azure.html
 and https://docs.min.io/docs/minio-gateway-for-s3.html
+
+## Charm Release Versioning
+
+Note: Rather than versioning this charm by the workload itself, releases for this charm are versioned with `ckf-x.y`, indicating the Charmed Kubeflow version they're released with.  
