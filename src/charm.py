@@ -114,14 +114,6 @@ class Operator(CharmBase):
                             "emptyDir": {},
                         },
                     ],
-                    "kubernetes": {
-                        "securityContext": {
-                            "runAsNonRoot": False,
-                            "privileged": True,
-                            "readOnlyRootFilesystem": False,
-                            # "runAsUser":1000,
-                        },
-                    },
                 }
             ],
             "kubernetesResources": {
