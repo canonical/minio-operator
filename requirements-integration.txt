@@ -12,6 +12,7 @@ async-generator==1.10
     #   trio-websocket
 attrs==22.1.0
     # via
+    #   -r ./requirements.txt
     #   jsonschema
     #   outcome
     #   pytest
@@ -28,6 +29,7 @@ cachetools==5.2.0
     # via google-auth
 certifi==2022.9.24
     # via
+    #   -r ./requirements.txt
     #   kubernetes
     #   requests
     #   selenium
@@ -37,7 +39,9 @@ cffi==1.15.1
     #   cryptography
     #   pynacl
 chardet==3.0.4
-    # via requests
+    # via
+    #   -r ./requirements.txt
+    #   requests
 cryptography==38.0.4
     # via
     #   paramiko
@@ -66,6 +70,7 @@ hyperframe==6.0.1
     #   selenium-wire
 idna==2.10
     # via
+    #   -r ./requirements.txt
     #   requests
     #   trio
 iniconfig==1.1.1
@@ -79,7 +84,9 @@ jedi==0.18.2
 jinja2==3.1.2
     # via pytest-operator
 jsonschema==3.2.0
-    # via serialized-data-interface
+    # via
+    #   -r ./requirements.txt
+    #   serialized-data-interface
 juju==3.0.4
     # via
     #   -r ./requirements-integration.in
@@ -160,7 +167,9 @@ pyrfc3339==1.1
     #   juju
     #   macaroonbakery
 pyrsistent==0.19.2
-    # via jsonschema
+    # via
+    #   -r ./requirements.txt
+    #   jsonschema
 pysocks==1.7.1
     # via
     #   selenium-wire
@@ -179,6 +188,7 @@ pytz==2022.6
     # via pyrfc3339
 pyyaml==5.4
     # via
+    #   -r ./requirements.txt
     #   juju
     #   jujubundlelib
     #   kubernetes
@@ -187,6 +197,7 @@ pyyaml==5.4
     #   serialized-data-interface
 requests==2.25.0
     # via
+    #   -r ./requirements.txt
     #   kubernetes
     #   macaroonbakery
     #   requests-oauthlib
@@ -206,6 +217,7 @@ serialized-data-interface==0.4.0
     # via -r ./requirements.txt
 six==1.16.0
     # via
+    #   -r ./requirements.txt
     #   asttokens
     #   google-auth
     #   jsonschema
@@ -244,6 +256,7 @@ typing-inspect==0.8.0
     # via juju
 urllib3[socks]==1.26.13
     # via
+    #   -r ./requirements.txt
     #   kubernetes
     #   requests
     #   selenium

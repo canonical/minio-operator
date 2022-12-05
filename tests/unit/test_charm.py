@@ -83,9 +83,7 @@ def test_unversioned(harness):
     rel_id = harness.add_relation("object-storage", "argo-controller")
     harness.add_relation_unit(rel_id, "argo-controller/0")
     harness.begin_with_initial_hooks()
-    assert harness.charm.model.unit.status == WaitingStatus(
-        "List of object-storage versions not found for apps: argo-controller"
-    )
+    assert isinstance(harness.charm.model.unit.status, WaitingStatus)
 
 
 def test_main_with_relation(harness):
