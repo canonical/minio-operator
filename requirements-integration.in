@@ -1,0 +1,5 @@
+juju
+pytest-operator
+selenium
+selenium-wire
+-r requirements.txt

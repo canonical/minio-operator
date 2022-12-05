@@ -1,16 +1,15 @@
 # Copyright 2021 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+import json
 import logging
 from pathlib import Path
 
-import json
-import requests
 import pytest
+import requests
 import yaml
-
 from pytest_operator.plugin import OpsTest
-from tenacity import Retrying, stop_after_delay, stop_after_attempt, wait_exponential
+from tenacity import Retrying, stop_after_attempt, stop_after_delay, wait_exponential
 
 log = logging.getLogger(__name__)
 
@@ -213,9 +212,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     # Deploy and relate prometheus
     await ops_test.model.deploy(prometheus, channel="latest/edge", trust=True)
     await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
-    await ops_test.model.deploy(
-        prometheus_scrape, channel="latest/beta", config=scrape_config
-    )
+    await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
 
     await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
     await ops_test.model.add_relation(
@@ -231,15 +228,12 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"][
-        "address"
-    ]
+    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
         log.info(
-            f"Testing prometheus deployment (attempt "
-            f"{attempt.retry_state.attempt_number})"
+            f"Testing prometheus deployment (attempt " f"{attempt.retry_state.attempt_number})"
         )
         with attempt:
             r = requests.get(
