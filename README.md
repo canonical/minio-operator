@@ -35,7 +35,7 @@ MinIO can be operated in the following modes:
 * `gateway`: MinIO works as a gateway to a separate blob storage (such as Amazon S3),
   providing an access layer to your data for in-cluster workloads
 
-### Exmple using `gateway` mode
+### Example using `gateway` mode
 
 This charm supports using the following backing data storage services:
 * s3

@@ -3,23 +3,19 @@
 # See LICENSE file for licensing details.
 
 import logging
-from random import choices
-from string import ascii_uppercase, digits
 from base64 import b64encode
 from hashlib import sha256
+from random import choices
+from string import ascii_uppercase, digits
 
-from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
-from serialized_data_interface import (
-    NoCompatibleVersions,
-    NoVersionsListed,
-    get_interfaces,
-)
+from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 
 
 class Operator(CharmBase):
@@ -41,9 +37,7 @@ class Operator(CharmBase):
                     "job_name": "minio_metrics",
                     "scrape_interval": "30s",
                     "metrics_path": "/minio/v2/metrics/cluster",
-                    "static_configs": [
-                        {"targets": ["*:{}".format(self.config["port"])]}
-                    ],
+                    "static_configs": [{"targets": ["*:{}".format(self.config["port"])]}],
                 }
             ],
         )
@@ -98,9 +92,7 @@ class Operator(CharmBase):
                         },
                     ],
                     "envConfig": {
-                        "minio-secret": {
-                            "secret": {"name": f"{self.model.app.name}-secret"}
-                        },
+                        "minio-secret": {"secret": {"name": f"{self.model.app.name}-secret"}},
                         # This hash forces a restart for pods whenever we change the config.
                         # This would ideally be a spec.template.metadata.annotation rather
                         # than an environment variable, but we cannot use that using podspec.
@@ -138,9 +130,7 @@ class Operator(CharmBase):
             spec["containers"][0]["volumeConfig"].append(self._get_ssl_volume_config())
             spec["kubernetesResources"]["secrets"].append(self._get_ssl_secret())
         else:
-            self.log.info(
-                "SSL: No secret specified in charm config. Proceeding without SSL."
-            )
+            self.log.info("SSL: No secret specified in charm config. Proceeding without SSL.")
 
         self.model.pod.set_spec(spec)
         self.model.unit.status = ActiveStatus()
@@ -200,8 +190,7 @@ class Operator(CharmBase):
             return self._with_console_address(self._get_minio_args_gateway())
         else:
             error_msg = (
-                f"Model mode {model_mode} is not supported. "
-                "Possible values server, gateway"
+                f"Model mode {model_mode} is not supported. " "Possible values server, gateway"
             )
             self.log.error(error_msg)
             raise CheckFailed(error_msg, BlockedStatus)
@@ -280,9 +269,7 @@ class Operator(CharmBase):
         }
 
     def _has_ssl_config(self):
-        return (
-            self.model.config["ssl-key"] != "" and self.model.config["ssl-cert"] != ""
-        )
+        return self.model.config["ssl-key"] != "" and self.model.config["ssl-cert"] != ""
 
 
 def _gen_pass() -> str:
