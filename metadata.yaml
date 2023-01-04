@@ -27,4 +27,3 @@ storage:
   minio-data:
     type: filesystem
     location: /data
-    minimum-size: 10G
