@@ -388,6 +388,7 @@ def test_generate_config_hash(config, hash_salt, expected_hash, harness):
 def test_prometheus_data_set(harness, mocker):
     harness.set_leader(True)
     harness.set_model_name("kubeflow")
+    harness.begin()
 
     mock_net_get = mocker.patch("ops.testing._TestingModelBackend.network_get")
     mocker.patch("ops.testing._TestingPebbleClient.list_files")
@@ -405,7 +406,6 @@ def test_prometheus_data_set(harness, mocker):
     rel_id = harness.add_relation("metrics-endpoint", "otherapp")
     harness.add_relation_unit(rel_id, "otherapp/0")
     harness.update_relation_data(rel_id, "otherapp", {})
-    harness.begin()
 
     assert json.loads(harness.get_relation_data(rel_id, harness.model.app.name)["scrape_jobs"])[0][
         "static_configs"
