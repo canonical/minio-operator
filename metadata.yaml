@@ -6,7 +6,7 @@ description: |
   MinIO's high-performance object storage suite is software defined and
   enables customers to build cloud-native data infrastructure for
   machine learning, analytics and application data workloads.
-docs: https://discourse.charmhub.io/t/minio-docs-index/10861
+docs: https://discourse.charmhub.io/t/10861
 min-juju-version: "2.9.0"
 series: [kubernetes]
 resources:
