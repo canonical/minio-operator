@@ -152,6 +152,7 @@ pysocks==1.7.1
     #   urllib3
 pytest==7.4.0
     # via
+    #   -r ./requirements-integration.in
     #   pytest-asyncio
     #   pytest-operator
 pytest-asyncio==0.21.1
@@ -164,12 +165,14 @@ pytz==2023.3
     # via pyrfc3339
 pyyaml==6.0.1
     # via
+    #   -r ./requirements-integration.in
     #   juju
     #   jujubundlelib
     #   kubernetes
     #   pytest-operator
 requests==2.31.0
     # via
+    #   -r ./requirements-integration.in
     #   kubernetes
     #   macaroonbakery
     #   requests-oauthlib
