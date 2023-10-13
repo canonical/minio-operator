@@ -17,6 +17,10 @@ from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 
+# The name of the minio service is hardcoded in the
+# object store source code of pipelines as "minio-service"
+# See https://github.com/kubeflow/pipelines/issues/9689 for more information
+MINIO_SERVICE = "minio-service"
 
 class Operator(CharmBase):
     _stored = StoredState()
@@ -121,7 +125,29 @@ class Operator(CharmBase):
                             }.items()
                         },
                     },
-                ]
+                ],
+                "services": [
+                    {
+                        "name": MINIO_SERVICE,
+                        "spec": {
+                            "selector": {"app.kubernetes.io/name": self.model.app.name},
+                            "ports": [
+                                {
+                                    "name": "minio",
+                                    "port": int(self.model.config["port"]),
+                                    "protocol": "TCP",
+                                    "targetPort": int(self.model.config["port"]),
+                                },
+                                {
+                                    "name": "console",
+                                    "port": int(self.model.config["console-port"]),
+                                    "protocol": "TCP",
+                                    "targetPort": int(self.model.config["console-port"]),
+                                },
+                            ],
+                        },
+                    },
+                ],
             },
         }
 
@@ -165,7 +191,7 @@ class Operator(CharmBase):
                     "port": self.model.config["port"],
                     "secret-key": secret_key,
                     "secure": False,
-                    "service": self.model.app.name,
+                    "service": MINIO_SERVICE,
                 }
             )
 
