@@ -9,7 +9,7 @@ import yaml
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
-from charm import Operator
+from charm import MINIO_SERVICE, Operator
 
 
 @pytest.fixture
@@ -119,7 +119,7 @@ def test_main_with_relation(harness):
     assert data["port"] == 9000
     assert data["secure"] is False
     assert len(data["secret-key"]) == 30
-    assert data["service"] == "minio"
+    assert data["service"] == MINIO_SERVICE
 
 
 def test_main_with_manual_secret(harness):
@@ -150,7 +150,7 @@ def test_main_with_manual_secret(harness):
         "port": 9000,
         "secret-key": "test-key",
         "secure": False,
-        "service": "minio",
+        "service": MINIO_SERVICE,
     }
     assert harness.charm.model.unit.status == ActiveStatus("")
 

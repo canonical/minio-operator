@@ -22,6 +22,7 @@ from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, ge
 # See https://github.com/kubeflow/pipelines/issues/9689 for more information
 MINIO_SERVICE = "minio-service"
 
+
 class Operator(CharmBase):
     _stored = StoredState()
 
