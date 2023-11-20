@@ -28,6 +28,8 @@ class Operator(CharmBase):
         # Random salt used for hashing config
         self._stored.set_default(hash_salt=_gen_pass())
 
+        self._minio_service_name = self.app.name
+
         self.image = OCIImageResource(self, "oci-image")
 
         self.prometheus_provider = MetricsEndpointProvider(
@@ -165,7 +167,7 @@ class Operator(CharmBase):
                     "port": self.model.config["port"],
                     "secret-key": secret_key,
                     "secure": False,
-                    "service": self.model.app.name,
+                    "service": self._minio_service_name,
                 }
             )
 
