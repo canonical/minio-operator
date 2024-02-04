@@ -100,6 +100,9 @@ class Operator(CharmBase):
                         # than an environment variable, but we cannot use that using podspec.
                         # (see https://stackoverflow.com/questions/37317003/restart-pods-when-configmap-updates-in-kubernetes/51421527#51421527)  # noqa E403
                         "configmap-hash": configmap_hash,
+                        # To allow public access without authentication for prometheus
+                        # metrics set environment as follows.
+                        "MINIO_PROMETHEUS_AUTH_TYPE": "public",
                     },
                     "volumeConfig": [
                         {
