@@ -771,86 +771,6 @@
     {
       "cacheTimeout": null,
       "datasource": "${prometheusds}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 3,
-        "y": 6
-      },
-      "id": 9,
-      "interval": null,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.0.6",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "minio_cluster_disk_online_total{}",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "Total online disks in MinIO Cluster",
-          "metric": "process_start_time_seconds",
-          "refId": "A",
-          "step": 60
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Total Online Disks",
-      "type": "stat"
-    },
-    {
-      "cacheTimeout": null,
-      "datasource": "${prometheusds}",
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -1201,86 +1121,6 @@
     {
       "cacheTimeout": null,
       "datasource": "${prometheusds}",
-      "description": "",
-      "fieldConfig": {
-        "defaults": {
-          "mappings": [
-            {
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "N/A"
-                }
-              },
-              "type": "special"
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 2,
-        "w": 3,
-        "x": 3,
-        "y": 8
-      },
-      "id": 78,
-      "interval": null,
-      "links": [],
-      "maxDataPoints": 100,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "reduceOptions": {
-          "calcs": [
-            "mean"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "text": {},
-        "textMode": "auto"
-      },
-      "pluginVersion": "8.0.6",
-      "targets": [
-        {
-          "exemplar": true,
-          "expr": "minio_cluster_disk_offline_total{}",
-          "format": "table",
-          "hide": false,
-          "instant": true,
-          "interval": "",
-          "intervalFactor": 1,
-          "legendFormat": "",
-          "metric": "process_start_time_seconds",
-          "refId": "A",
-          "step": 60
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Total Offline Disks",
-      "type": "stat"
-    },
-    {
-      "cacheTimeout": null,
-      "datasource": "${prometheusds}",
       "fieldConfig": {
         "defaults": {
           "mappings": [
@@ -1451,7 +1291,7 @@
         "h": 2,
         "w": 3,
         "x": 3,
-        "y": 10
+        "y": 6
       },
       "id": 81,
       "interval": null,
@@ -1850,7 +1690,7 @@
         },
         {
           "exemplar": true,
-          "expr": "sum by (instance) (minio_heal_objects_error_total{})",
+          "expr": "sum by (instance) (minio_heal_objects_errors_total{})",
           "hide": false,
           "interval": "",
           "legendFormat": "Heal errors in current self heal run",
