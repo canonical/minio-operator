@@ -3,29 +3,49 @@
 
 import json
 import logging
+from pathlib import Path
 
 import pytest
 import requests
+import yaml
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_attempt, stop_after_delay, wait_exponential
 
-import tests.integration.constants as constants
-
 log = logging.getLogger(__name__)
+
+METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+
+MINIO_CONFIG = {
+    "access-key": "minio",
+    "secret-key": "minio-secret-key",
+}
+
+APP_NAME = "minio"
+CHARM_ROOT = "."
+
+PROMETHEUS_K8S = "prometheus-k8s"
+PROMETHEUS_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_K8S_TRUST = True
+GRAFANA_K8S = "grafana-k8s"
+GRAFANA_K8S_CHANNEL = "1.0/stable"
+GRAFANA_K8S_TRUST = True
+PROMETHEUS_SCRAPE_K8S = "prometheus-scrape-config-k8s"
+PROMETHEUS_SCRAPE_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_SCRAPE_CONFIG = {"scrape_interval": "30s"}
 
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest):
-    built_charm_path = await ops_test.build_charm(constants.CHARM_ROOT)
+    built_charm_path = await ops_test.build_charm(CHARM_ROOT)
     log.info(f"Built charm {built_charm_path}")
 
-    image_path = constants.METADATA["resources"]["oci-image"]["upstream-source"]
+    image_path = METADATA["resources"]["oci-image"]["upstream-source"]
     resources = {"oci-image": image_path}
 
     await ops_test.model.deploy(
         entity_url=built_charm_path,
         resources=resources,
-        config=constants.MINIO_CONFIG,
+        config=MINIO_CONFIG,
     )
     await ops_test.model.wait_for_idle(timeout=60 * 10)
 
@@ -55,7 +75,7 @@ async def connect_client_to_server(
     port = config["port"]["value"]
     alias = "ci"
     bucket = "testbucket"
-    service_name = constants.APP_NAME
+    service_name = APP_NAME
     model_name = ops_test.model_name
 
     url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
@@ -99,7 +119,7 @@ async def test_connect_client_to_server(ops_test: OpsTest):
     Tests a deployed MinIO by connecting with mc (MinIO client) via a Pod.
     """
 
-    application = ops_test.model.applications[constants.APP_NAME]
+    application = ops_test.model.applications[APP_NAME]
 
     for attempt in retry_for_60_seconds:
         log.info(
@@ -123,10 +143,10 @@ async def test_connect_to_console(ops_test: OpsTest):
     Tests a deployed MinIO app by trying to connect to the MinIO console
     """
 
-    application = ops_test.model.applications[constants.APP_NAME]
+    application = ops_test.model.applications[APP_NAME]
     config = await application.get_config()
     port = config["console-port"]["value"]
-    service_name = constants.APP_NAME
+    service_name = APP_NAME
     model_name = ops_test.model_name
     log.info(f"ops_test.model_name = {ops_test.model_name}")
 
@@ -167,7 +187,7 @@ async def test_refresh_credentials(ops_test: OpsTest):
           avoids restarting the workload.
     """
     # Update credentials in deployed Minio's config
-    application = ops_test.model.applications[constants.APP_NAME]
+    application = ops_test.model.applications[APP_NAME]
     old_config = await application.get_config()
     config = {
         "access-key": old_config["access-key"]["value"] + "modified",
@@ -192,41 +212,41 @@ async def test_refresh_credentials(ops_test: OpsTest):
 async def test_prometheus_grafana_integration(ops_test: OpsTest):
     """Deploy prometheus, grafana and required relations, then test the metrics."""
     await ops_test.model.deploy(
-        constants.PROMETHEUS_K8S,
-        channel=constants.PROMETHEUS_K8S_CHANNEL,
-        trust=constants.PROMETHEUS_K8S_TRUST,
+        PROMETHEUS_K8S,
+        channel=PROMETHEUS_K8S_CHANNEL,
+        trust=PROMETHEUS_K8S_TRUST,
     )
 
     await ops_test.model.deploy(
-        constants.GRAFANA_K8S,
-        channel=constants.GRAFANA_K8S_CHANNEL,
-        trust=constants.GRAFANA_K8S_TRUST,
+        GRAFANA_K8S,
+        channel=GRAFANA_K8S_CHANNEL,
+        trust=GRAFANA_K8S_TRUST,
     )
 
     await ops_test.model.deploy(
-        constants.PROMETHEUS_SCRAPE_K8S,
-        channel=constants.PROMETHEUS_SCRAPE_K8S_CHANNEL,
-        config=constants.PROMETHEUS_SCRAPE_CONFIG,
+        PROMETHEUS_SCRAPE_K8S,
+        channel=PROMETHEUS_SCRAPE_K8S_CHANNEL,
+        config=PROMETHEUS_SCRAPE_CONFIG,
     )
 
-    await ops_test.model.add_relation(constants.APP_NAME, constants.PROMETHEUS_SCRAPE_K8S)
+    await ops_test.model.add_relation(APP_NAME, PROMETHEUS_SCRAPE_K8S)
     await ops_test.model.add_relation(
-        f"{constants.PROMETHEUS_K8S}:grafana-dashboard",
-        f"{constants.GRAFANA_K8S}:grafana-dashboard",
+        f"{PROMETHEUS_K8S}:grafana-dashboard",
+        f"{GRAFANA_K8S}:grafana-dashboard",
     )
     await ops_test.model.add_relation(
-        f"{constants.APP_NAME}:grafana-dashboard", f"{constants.GRAFANA_K8S}:grafana-dashboard"
+        f"{APP_NAME}:grafana-dashboard", f"{GRAFANA_K8S}:grafana-dashboard"
     )
     await ops_test.model.add_relation(
-        f"{constants.PROMETHEUS_K8S}:metrics-endpoint",
-        f"{constants.PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
+        f"{PROMETHEUS_K8S}:metrics-endpoint",
+        f"{PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
     )
 
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][constants.PROMETHEUS_K8S]["units"][
-        f"{constants.PROMETHEUS_K8S}/0"
+    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][
+        f"{PROMETHEUS_K8S}/0"
     ]["address"]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
@@ -237,7 +257,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
         with attempt:
             r = requests.get(
                 f"http://{prometheus_unit_ip}:9090/api/v1/query?"
-                f'query=up{{juju_application="{constants.APP_NAME}"}}'
+                f'query=up{{juju_application="{APP_NAME}"}}'
             )
             response = json.loads(r.content.decode("utf-8"))
             response_status = response["status"]
@@ -245,7 +265,7 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
             assert response_status == "success"
 
             response_metric = response["data"]["result"][0]["metric"]
-            assert response_metric["juju_application"] == constants.APP_NAME
+            assert response_metric["juju_application"] == APP_NAME
             assert response_metric["juju_model"] == ops_test.model_name
 
             # Assert the unit is available by checking the query result
