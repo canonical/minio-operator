@@ -245,9 +245,9 @@ async def test_prometheus_grafana_integration(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][
-        f"{PROMETHEUS_K8S}/0"
-    ]["address"]
+    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][f"{PROMETHEUS_K8S}/0"][
+        "address"
+    ]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
