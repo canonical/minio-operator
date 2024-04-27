@@ -10,6 +10,8 @@ certifi==2023.7.22
     # via requests
 charset-normalizer==3.2.0
     # via requests
+cosl==0.0.11
+    # via -r requirements.in
 idna==3.4
     # via requests
 importlib-resources==6.0.1
@@ -21,6 +23,7 @@ oci-image==1.0.0
 ops==2.5.0
     # via
     #   -r requirements.in
+    #   cosl
     #   serialized-data-interface
 pkgutil-resolve-name==1.3.10
     # via jsonschema
@@ -28,12 +31,15 @@ pyrsistent==0.19.3
     # via jsonschema
 pyyaml==6.0.1
     # via
+    #   cosl
     #   ops
     #   serialized-data-interface
 requests==2.31.0
     # via serialized-data-interface
 serialized-data-interface==0.7.0
     # via -r requirements.in
+typing-extensions==4.11.0
+    # via cosl
 urllib3==2.0.4
     # via requests
 websocket-client==1.6.1
