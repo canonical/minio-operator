@@ -10,6 +10,8 @@ certifi==2023.7.22
     # via requests
 charset-normalizer==3.2.0
     # via requests
+cosl==0.0.11
+    # via -r requirements.in
 coverage==7.3.0
     # via -r requirements-unit.in
 exceptiongroup==1.1.2
@@ -28,6 +30,7 @@ ops==2.5.0
     # via
     #   -r requirements-unit.in
     #   -r requirements.in
+    #   cosl
     #   serialized-data-interface
 packaging==23.1
     # via pytest
@@ -49,6 +52,7 @@ pytest-mock==3.11.1
 pyyaml==6.0.1
     # via
     #   -r requirements-unit.in
+    #   cosl
     #   ops
     #   serialized-data-interface
 requests==2.31.0
@@ -57,6 +61,8 @@ serialized-data-interface==0.7.0
     # via -r requirements.in
 tomli==2.0.1
     # via pytest
+typing-extensions==4.11.0
+    # via cosl
 urllib3==2.0.4
     # via requests
 websocket-client==1.6.1
