@@ -53,7 +53,8 @@ jobs:
           channel: 1.25-strict/stable
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
           charmcraft-channel: latest/candidate
-          juju-channel: 3.1/stable
+          # DEBUG: This should be flaky and fail in CI due to juju podspec bub
+          juju-channel: 3.4/stable
 
       - name: Build and test
         run: |
