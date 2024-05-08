@@ -22,9 +22,16 @@ MINIO_CONFIG = {
 
 APP_NAME = "minio"
 CHARM_ROOT = "."
-PROMETHEUS = "prometheus-k8s"
-GRAFANA = "grafana-k8s"
-PROMETHEUS_SCRAPE = "prometheus-scrape-config-k8s"
+
+PROMETHEUS_K8S = "prometheus-k8s"
+PROMETHEUS_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_K8S_TRUST = True
+GRAFANA_K8S = "grafana-k8s"
+GRAFANA_K8S_CHANNEL = "1.0/stable"
+GRAFANA_K8S_TRUST = True
+PROMETHEUS_SCRAPE_K8S = "prometheus-scrape-config-k8s"
+PROMETHEUS_SCRAPE_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_SCRAPE_CONFIG = {"scrape_interval": "30s"}
 
 
 @pytest.mark.abort_on_fail
@@ -204,51 +211,43 @@ async def test_refresh_credentials(ops_test: OpsTest):
 
 async def test_prometheus_grafana_integration(ops_test: OpsTest):
     """Deploy prometheus, grafana and required relations, then test the metrics."""
-    prometheus = "prometheus-k8s"
-    grafana = "grafana-k8s"
-    prometheus_scrape = "prometheus-scrape-config-k8s"
-    scrape_config = {"scrape_interval": "30s"}
+    await ops_test.model.deploy(
+        PROMETHEUS_K8S,
+        channel=PROMETHEUS_K8S_CHANNEL,
+        trust=PROMETHEUS_K8S_TRUST,
+    )
 
-    # Deploy and relate prometheus
-    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/688 is closed
-    await ops_test.juju(
-        "deploy",
-        prometheus,
-        "--channel",
-        "latest/edge",
-        "--revision",
-        "137",
-        "--trust",
-        check=True,
+    await ops_test.model.deploy(
+        GRAFANA_K8S,
+        channel=GRAFANA_K8S_CHANNEL,
+        trust=GRAFANA_K8S_TRUST,
     )
-    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/690 is closed
-    await ops_test.juju(
-        "deploy",
-        grafana,
-        "--channel",
-        "latest/edge",
-        "--revision",
-        "89",
-        "--trust",
-        check=True,
-    )
-    await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
 
-    await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
+    await ops_test.model.deploy(
+        PROMETHEUS_SCRAPE_K8S,
+        channel=PROMETHEUS_SCRAPE_K8S_CHANNEL,
+        config=PROMETHEUS_SCRAPE_CONFIG,
+    )
+
+    await ops_test.model.add_relation(APP_NAME, PROMETHEUS_SCRAPE_K8S)
     await ops_test.model.add_relation(
-        f"{prometheus}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+        f"{PROMETHEUS_K8S}:grafana-dashboard",
+        f"{GRAFANA_K8S}:grafana-dashboard",
     )
     await ops_test.model.add_relation(
-        f"{APP_NAME}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+        f"{APP_NAME}:grafana-dashboard", f"{GRAFANA_K8S}:grafana-dashboard"
     )
     await ops_test.model.add_relation(
-        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
+        f"{PROMETHEUS_K8S}:metrics-endpoint",
+        f"{PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
     )
 
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
+    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][f"{PROMETHEUS_K8S}/0"][
+        "address"
+    ]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
