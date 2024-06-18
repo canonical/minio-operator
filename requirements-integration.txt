@@ -4,6 +4,8 @@
 #
 #    pip-compile requirements-integration.in
 #
+appnope==0.1.4
+    # via ipython
 asttokens==2.4.0
     # via stack-data
 attrs==23.1.0
