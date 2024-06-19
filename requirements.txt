@@ -20,7 +20,7 @@ jsonschema==4.17.3
     # via serialized-data-interface
 oci-image==1.0.0
     # via -r requirements.in
-ops==2.5.0
+ops==2.14.0
     # via
     #   -r requirements.in
     #   cosl
