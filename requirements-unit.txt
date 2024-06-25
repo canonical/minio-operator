@@ -4,21 +4,21 @@
 #
 #    pip-compile requirements-unit.in
 #
-attrs==23.1.0
+attrs==23.2.0
     # via jsonschema
-certifi==2023.7.22
+certifi==2024.6.2
     # via requests
-charset-normalizer==3.2.0
+charset-normalizer==3.3.2
     # via requests
-cosl==0.0.11
+cosl==0.0.12
     # via -r requirements.in
-coverage==7.3.0
+coverage==7.5.4
     # via -r requirements-unit.in
-exceptiongroup==1.1.2
+exceptiongroup==1.2.1
     # via pytest
-idna==3.4
+idna==3.7
     # via requests
-importlib-resources==6.0.1
+importlib-resources==6.4.0
     # via jsonschema
 iniconfig==2.0.0
     # via pytest
@@ -32,22 +32,22 @@ ops==2.14.0
     #   -r requirements.in
     #   cosl
     #   serialized-data-interface
-packaging==23.1
+packaging==24.1
     # via pytest
 pkgutil-resolve-name==1.3.10
     # via jsonschema
-pluggy==1.2.0
+pluggy==1.5.0
     # via pytest
-pyrsistent==0.19.3
+pyrsistent==0.20.0
     # via jsonschema
-pytest==7.4.0
+pytest==8.2.2
     # via
     #   -r requirements-unit.in
     #   pytest-lazy-fixture
     #   pytest-mock
 pytest-lazy-fixture==0.6.3
     # via -r requirements-unit.in
-pytest-mock==3.11.1
+pytest-mock==3.14.0
     # via -r requirements-unit.in
 pyyaml==6.0.1
     # via
@@ -55,17 +55,17 @@ pyyaml==6.0.1
     #   cosl
     #   ops
     #   serialized-data-interface
-requests==2.31.0
+requests==2.32.3
     # via serialized-data-interface
 serialized-data-interface==0.7.0
     # via -r requirements.in
 tomli==2.0.1
     # via pytest
-typing-extensions==4.11.0
+typing-extensions==4.12.2
     # via cosl
-urllib3==2.0.4
+urllib3==2.2.2
     # via requests
-websocket-client==1.6.1
+websocket-client==1.8.0
     # via ops
-zipp==3.16.2
+zipp==3.19.2
     # via importlib-resources
