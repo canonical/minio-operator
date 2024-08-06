@@ -4,45 +4,55 @@
 #
 #    pip-compile requirements.in
 #
-attrs==23.1.0
+annotated-types==0.7.0
+    # via pydantic
+attrs==24.1.0
     # via jsonschema
-certifi==2023.7.22
+certifi==2024.7.4
     # via requests
-charset-normalizer==3.2.0
+charset-normalizer==3.3.2
     # via requests
-cosl==0.0.11
+cosl==0.0.19
     # via -r requirements.in
-idna==3.4
+idna==3.7
     # via requests
-importlib-resources==6.0.1
+importlib-resources==6.4.0
     # via jsonschema
 jsonschema==4.17.3
     # via serialized-data-interface
 oci-image==1.0.0
     # via -r requirements.in
-ops==2.14.0
+ops==2.15.0
     # via
     #   -r requirements.in
     #   cosl
     #   serialized-data-interface
 pkgutil-resolve-name==1.3.10
     # via jsonschema
-pyrsistent==0.19.3
+pydantic==2.8.2
+    # via cosl
+pydantic-core==2.20.1
+    # via pydantic
+pyrsistent==0.20.0
     # via jsonschema
 pyyaml==6.0.1
     # via
     #   cosl
     #   ops
     #   serialized-data-interface
-requests==2.31.0
+requests==2.32.3
     # via serialized-data-interface
 serialized-data-interface==0.7.0
     # via -r requirements.in
-typing-extensions==4.11.0
-    # via cosl
-urllib3==2.0.4
+typing-extensions==4.12.2
+    # via
+    #   annotated-types
+    #   cosl
+    #   pydantic
+    #   pydantic-core
+urllib3==2.2.2
     # via requests
-websocket-client==1.6.1
+websocket-client==1.8.0
     # via ops
-zipp==3.16.2
+zipp==3.19.2
     # via importlib-resources
