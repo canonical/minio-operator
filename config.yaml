@@ -17,7 +17,7 @@ options:
   secret-key:
     type: string
     default: ''
-    description: Secret key
+    description: Secret key. Must be at least 8 characters long. If not provided, a random key will be used.
   mode:
     type: string
     default: 'server'
