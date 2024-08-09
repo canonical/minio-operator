@@ -70,6 +70,13 @@ class Operator(CharmBase):
             return
 
         secret_key = self._get_secret_key()
+
+        if len(secret_key) < 8:
+            self.model.unit.status = BlockedStatus(
+                "The `secret-key` config value must be at least 8 characters long."
+            )
+            return
+
         self._send_info(interfaces, secret_key)
 
         configmap_hash = self._generate_config_hash()
