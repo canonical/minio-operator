@@ -1,6 +1,9 @@
 # Terraform module for minio
 
-This is a Terraform module facilitating the deployment of minio charm, using the [Terraform juju provider](https://github.com/juju/terraform-provider-juju/). For more information, refer to the provider [documentation](https://registry.terraform.io/providers/juju/juju/latest/docs). 
+This is a Terraform module facilitating the deployment of minio charm, using the [Terraform juju provider](https://github.com/juju/terraform-provider-juju/). For more information, refer to the provider [documentation](https://registry.terraform.io/providers/juju/juju/latest/docs).
+
+## Compatibility
+This terraform module is compatible with charms of version >= ckf-1.9 due to changes in the charm's relations.
 
 ## Requirements
 This module requires a `juju` model to be available. Refer to the [usage section](#usage) below for more details.
@@ -16,7 +19,7 @@ The module offers the following configurable inputs:
 | `channel`| string | Channel that the charm is deployed from | False |
 | `config`| map(string) | Map of the charm configuration options | False |
 | `model_name`| string | Name of the model that the charm is deployed on | True |
-| `resources`| map(number) | Map of charm resources revisions | False |
+| `resources`| map(string) | Map of the charm resources | False |
 | `revision`| number | Revision number of the charm name | False |
 
 ### Outputs
