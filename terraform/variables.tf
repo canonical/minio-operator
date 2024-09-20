@@ -34,7 +34,7 @@ variable "revision" {
 }
 
 variable "storage_directives" {
-  description = "Charm storage"
+  description = "Map of storage directives"
   type        = map(string)
   default     = null
 }
