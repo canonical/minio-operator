@@ -27,6 +27,13 @@ jobs:
         sudo apt install tox
     - name: Lint code
       run: tox -vve lint
+  
+  terraform-checks:
+    name: Terraform
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
+    with:
+      charm-path: .
+      channel: ckf-1.9/stable
 
   unit:
     name: Unit Tests
