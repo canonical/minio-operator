@@ -4,68 +4,106 @@
 #
 #    pip-compile requirements-unit.in
 #
-attrs==23.1.0
+annotated-types==0.7.0
+    # via pydantic
+anyio==4.5.2
+    # via httpx
+attrs==24.2.0
     # via jsonschema
-certifi==2023.7.22
+certifi==2024.8.30
+    # via
+    #   httpcore
+    #   httpx
+    #   requests
+charset-normalizer==3.4.0
     # via requests
-charset-normalizer==3.2.0
-    # via requests
-cosl==0.0.11
+cosl==0.0.45
     # via -r requirements.in
-coverage==7.3.0
+coverage==7.6.1
     # via -r requirements-unit.in
-exceptiongroup==1.1.2
-    # via pytest
-idna==3.4
-    # via requests
-importlib-resources==6.0.1
+exceptiongroup==1.2.2
+    # via
+    #   anyio
+    #   pytest
+h11==0.14.0
+    # via httpcore
+httpcore==1.0.7
+    # via httpx
+httpx==0.27.2
+    # via lightkube
+idna==3.10
+    # via
+    #   anyio
+    #   httpx
+    #   requests
+importlib-resources==6.4.5
     # via jsonschema
 iniconfig==2.0.0
     # via pytest
 jsonschema==4.17.3
     # via serialized-data-interface
+lightkube==0.15.6
+    # via cosl
+lightkube-models==1.31.1.8
+    # via lightkube
 oci-image==1.0.0
     # via -r requirements.in
-ops==2.14.0
+ops==2.17.1
     # via
     #   -r requirements-unit.in
     #   -r requirements.in
     #   cosl
     #   serialized-data-interface
-packaging==23.1
+packaging==24.2
     # via pytest
 pkgutil-resolve-name==1.3.10
     # via jsonschema
-pluggy==1.2.0
+pluggy==1.5.0
     # via pytest
-pyrsistent==0.19.3
+pydantic==2.10.3
+    # via cosl
+pydantic-core==2.27.1
+    # via pydantic
+pyrsistent==0.20.0
     # via jsonschema
-pytest==7.4.0
+pytest==8.3.4
     # via
     #   -r requirements-unit.in
     #   pytest-lazy-fixture
     #   pytest-mock
 pytest-lazy-fixture==0.6.3
     # via -r requirements-unit.in
-pytest-mock==3.11.1
+pytest-mock==3.14.0
     # via -r requirements-unit.in
-pyyaml==6.0.1
+pyyaml==6.0.2
     # via
     #   -r requirements-unit.in
     #   cosl
+    #   lightkube
     #   ops
     #   serialized-data-interface
-requests==2.31.0
+requests==2.32.3
     # via serialized-data-interface
 serialized-data-interface==0.7.0
     # via -r requirements.in
-tomli==2.0.1
-    # via pytest
-typing-extensions==4.11.0
+sniffio==1.3.1
+    # via
+    #   anyio
+    #   httpx
+tenacity==9.0.0
     # via cosl
-urllib3==2.0.4
+tomli==2.2.1
+    # via pytest
+typing-extensions==4.12.2
+    # via
+    #   annotated-types
+    #   anyio
+    #   cosl
+    #   pydantic
+    #   pydantic-core
+urllib3==2.2.3
     # via requests
-websocket-client==1.6.1
+websocket-client==1.8.0
     # via ops
-zipp==3.16.2
+zipp==3.20.2
     # via importlib-resources
