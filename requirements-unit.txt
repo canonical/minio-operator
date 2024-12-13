@@ -17,8 +17,8 @@ certifi==2024.8.30
     #   requests
 charset-normalizer==3.4.0
     # via requests
-cosl==0.0.45
-    # via -r requirements.in
+cosl==0.0.47
+    # via -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
 coverage==7.6.1
     # via -r requirements-unit.in
 exceptiongroup==1.2.2
@@ -42,16 +42,16 @@ iniconfig==2.0.0
     # via pytest
 jsonschema==4.17.3
     # via serialized-data-interface
-lightkube==0.15.6
+lightkube==0.15.7
     # via cosl
 lightkube-models==1.31.1.8
     # via lightkube
 oci-image==1.0.0
-    # via -r requirements.in
+    # via -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
 ops==2.17.1
     # via
+    #   -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
     #   -r requirements-unit.in
-    #   -r requirements.in
     #   cosl
     #   serialized-data-interface
 packaging==24.2
@@ -82,7 +82,7 @@ pyyaml==6.0.2
 requests==2.32.3
     # via serialized-data-interface
 serialized-data-interface==0.7.0
-    # via -r requirements.in
+    # via -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
 sniffio==1.3.1
     # via
     #   anyio
