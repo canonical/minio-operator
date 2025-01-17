@@ -8,17 +8,17 @@ annotated-types==0.7.0
     # via pydantic
 anyio==4.5.2
     # via httpx
-attrs==24.2.0
+attrs==24.3.0
     # via jsonschema
-certifi==2024.8.30
+certifi==2024.12.14
     # via
     #   httpcore
     #   httpx
     #   requests
-charset-normalizer==3.4.0
+charset-normalizer==3.4.1
     # via requests
-cosl==0.0.50
-    # via -r requirements.in
+cosl==0.0.51
+    # via -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
 coverage==7.6.1
     # via -r requirements-unit.in
 exceptiongroup==1.2.2
@@ -29,7 +29,7 @@ h11==0.14.0
     # via httpcore
 httpcore==1.0.7
     # via httpx
-httpx==0.27.2
+httpx==0.28.1
     # via lightkube
 idna==3.10
     # via
@@ -42,16 +42,16 @@ iniconfig==2.0.0
     # via pytest
 jsonschema==4.17.3
     # via serialized-data-interface
-lightkube==0.15.6
+lightkube==0.17.1
     # via cosl
-lightkube-models==1.31.1.8
+lightkube-models==1.32.0.8
     # via lightkube
 oci-image==1.0.0
-    # via -r requirements.in
+    # via -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
 ops==2.17.1
     # via
+    #   -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
     #   -r requirements-unit.in
-    #   -r requirements.in
     #   cosl
     #   serialized-data-interface
 packaging==24.2
@@ -60,9 +60,9 @@ pkgutil-resolve-name==1.3.10
     # via jsonschema
 pluggy==1.5.0
     # via pytest
-pydantic==2.10.3
+pydantic==2.10.5
     # via cosl
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via pydantic
 pyrsistent==0.20.0
     # via jsonschema
@@ -82,11 +82,9 @@ pyyaml==6.0.2
 requests==2.32.3
     # via serialized-data-interface
 serialized-data-interface==0.7.0
-    # via -r requirements.in
+    # via -r /tmp/renovate/repos/github/canonical/minio-operator/requirements.in
 sniffio==1.3.1
-    # via
-    #   anyio
-    #   httpx
+    # via anyio
 tenacity==9.0.0
     # via cosl
 tomli==2.2.1
