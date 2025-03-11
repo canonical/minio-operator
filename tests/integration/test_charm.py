@@ -114,7 +114,6 @@ async def connect_client_to_server(
     )
 
     kubectl_cmd = (
-        "microk8s",
         "kubectl",
         "run",
         "--rm",
@@ -180,7 +179,6 @@ async def test_connect_to_console(ops_test: OpsTest):
     url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
 
     kubectl_cmd = (
-        "microk8s",
         "kubectl",
         "run",
         "--rm",
@@ -234,3 +232,44 @@ async def test_refresh_credentials(ops_test: OpsTest):
                 access_key=config["access-key"],
                 secret_key=config["secret-key"],
             )
+
+
+async def test_file_permissions(ops_test: OpsTest):
+    """Ensure container processes have permissions to manipulate /data"""
+    # get the gid of the files created in the PVC and ensure the
+    # processes inside the container belong to the same group
+    kubectl_cmd = (
+        "kubectl",
+        "exec",
+        f"--namespace={ops_test.model_name}",
+        "-ti",
+        f"{APP_NAME}-0",
+        "-c",
+        APP_NAME,
+        "--",
+        "stat",
+        "-c",
+        "%g",
+        "/data/",
+    )
+
+    ret_code, fs_group, _ = await ops_test.run(*kubectl_cmd)
+    assert ret_code == 0
+
+    kubectl_cmd = (
+        "kubectl",
+        "exec",
+        f"--namespace={ops_test.model_name}",
+        "-ti",
+        f"{APP_NAME}-0",
+        "-c",
+        APP_NAME,
+        "--",
+        "id",
+        "-G",
+    )
+
+    ret_code, groups, _ = await ops_test.run(*kubectl_cmd)
+    assert ret_code == 0
+
+    assert fs_group in groups

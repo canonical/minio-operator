@@ -121,6 +121,11 @@ class Operator(CharmBase):
                 }
             ],
             "kubernetesResources": {
+                "pod": {
+                    "securityContext": {
+                        "fsGroup": 2000,
+                    },
+                },
                 "secrets": [
                     {
                         "name": f"{self.model.app.name}-secret",
@@ -133,7 +138,7 @@ class Operator(CharmBase):
                             }.items()
                         },
                     },
-                ]
+                ],
             },
         }
 
