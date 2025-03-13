@@ -17,14 +17,17 @@ jobs:
 
   lint:
     name: Lint Code
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
     - name: Check out code
       uses: actions/checkout@v3
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v5.3.0
+      with:
+        python-version: 3.8
     - name: Install dependencies
       run: |
-        sudo apt update
-        sudo apt install tox
+        pip install tox
     - name: Lint code
       run: tox -vve lint
   
@@ -36,10 +39,14 @@ jobs:
 
   unit:
     name: Unit Tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
       - name: Install dependencies
         run: |
           pip install tox
@@ -48,10 +55,14 @@ jobs:
 
   integration:
     name: Integration Test (deploy and access)
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
         with:
@@ -63,7 +74,9 @@ jobs:
 
       - name: Build and test
         run: |
-          sg snap_microk8s -c "tox -vve integration -- --model testing"
+          # `newgrp` does not work in GitHub Actions; use `sudo --user` instead
+          # See https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
+          sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- tox -vve integration -- --model testing
 
       # On failure, capture debugging resources
       - name: Get all
