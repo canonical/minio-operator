@@ -74,8 +74,9 @@ jobs:
 
       - name: Build and test
         run: |
+          # microk8s permissions required due to tests running `microk8s kubectl` commands  
           # `sg` does not work in GitHub Actions; use `sudo --user` instead
-          # See https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
+          # see https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
           sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- tox -vve integration -- --model testing
 
       # On failure, capture debugging resources
