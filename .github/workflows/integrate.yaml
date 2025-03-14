@@ -74,7 +74,7 @@ jobs:
 
       - name: Build and test
         run: |
-          # `newgrp` does not work in GitHub Actions; use `sudo --user` instead
+          # `sg` does not work in GitHub Actions; use `sudo --user` instead
           # See https://github.com/actions/runner-images/issues/9932#issuecomment-2573170305
           sudo --user "$USER" --preserve-env --preserve-env=PATH -- env -- tox -vve integration -- --model testing
 
