@@ -9,8 +9,8 @@ groups:
     annotations:
       summary: "{{ $labels.juju_charm }} service is Down ({{ $labels.juju_model }}/{{ $labels.juju_unit }})"
       description: |
-       One or more targets of {{ $labels.juju_charm }} charm are down on unit {{ $labels.juju_model }}/{{ $labels.juju_unit }}.
-       LABELS = {{ $labels }}
+        One or more targets of {{ $labels.juju_charm }} charm are down on unit {{ $labels.juju_model }}/{{ $labels.juju_unit }}.
+        LABELS = {{ $labels }}
 
   - alert: KubeflowServiceIsNotStable
     expr: avg_over_time(up{}[10m]) < 0.5
@@ -21,4 +21,144 @@ groups:
       summary: "{{ $labels.juju_charm }} service is not stable ({{ $labels.juju_model }}/{{ $labels.juju_unit }})"
       description: |
         {{ $labels.juju_charm }} unit {{ $labels.juju_model }}/{{ $labels.juju_unit }} has been unreachable at least 50% of the time over the last 10 minutes.
+        LABELS = {{ $labels }}
+
+- name: MinioDiskAlerts
+  rules:
+  - alert: MinIO_Low_Disk_Space
+    expr: minio_node_disk_free_bytes < 10 * 1024 * 1024 * 1024
+    for: 5m
+    labels:
+      severity: critical
+    annotations:
+      summary: "Low disk space on MinIO node"
+      description: |
+        MinIO node has less than 10GB of free disk space.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_High_Disk_Usage
+    expr: (minio_node_disk_used_bytes / minio_node_disk_total_bytes) > 0.9
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "High disk usage on MinIO node"
+      description: |
+        MinIO node has over 90% of its disk space used.
+        LABELS = {{ $labels }}
+
+- name: MinioS3RequestAlerts
+  rules:
+  - alert: MinIO_S3_Request_Errors
+    expr: rate(minio_s3_requests_errors_total[2m]) / rate(minio_s3_requests_total[2m]) > 0.1
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "High rate of S3 request errors"
+      description: |
+        More than 10% of S3 requests are resulting in errors.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_S3_Request_Auth_Failures
+    expr: rate(minio_s3_requests_rejected_auth_total[2m]) > 1
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "High rate of S3 authentication failures"
+      description: |
+        MinIO is experiencing more than 1 authentication failure per second in S3 requests.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_S3_Request_Invalid
+    expr: rate(minio_s3_requests_rejected_invalid_total[2m]) > 1
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "Invalid S3 requests detected"
+      description: |
+        MinIO is rejecting more than 1 invalid S3 request per second.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_S3_Requests_Waiting
+    expr: rate(minio_s3_requests_waiting_total[2m]) > 5
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "S3 requests are waiting"
+      description: |
+        More than 5 S3 requests are persistently waiting per second.
+        LABELS = {{ $labels }}
+
+- name: MinioResourceUsageAlerts
+  rules:
+  - alert: MinIO_High_CPU_Usage
+    expr: rate(minio_node_process_cpu_total_seconds[2m]) > 0.8
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "High CPU usage by MinIO"
+      description: |
+        MinIO is consuming more than 80% CPU per core.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_High_Memory_Usage
+    expr: minio_node_process_resident_memory_bytes > 4 * 1024 * 1024 * 1024
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "High memory usage by MinIO"
+      description: |
+        MinIO process is using more than 4GB of memory.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_Too_Many_Open_File_Descriptors
+    expr: (minio_node_file_descriptor_open_total / minio_node_file_descriptor_limit_total) > 0.9
+    for: 5m
+    labels:
+      severity: high
+    annotations:
+      summary: "Too many open file descriptors"
+      description: |
+        MinIO is using over 90% of its allowed file descriptors.
+        LABELS = {{ $labels }}
+
+- name: MinioProcessHealthAlerts
+  rules:
+  - alert: MinIO_High_Go_Routines
+    expr: minio_node_go_routine_total > 1000
+    for: 5m
+    labels:
+      severity: medium
+    annotations:
+      summary: "High number of Go routines"
+      description: |
+        MinIO has more than 1000 Go routines running — possible goroutine leak.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_High_Syscall_Activity
+    expr: rate(minio_node_syscall_read_total[2m]) > 10000 or rate(minio_node_syscall_write_total[2m]) > 10000
+    for: 5m
+    labels:
+      severity: medium
+    annotations:
+      summary: "High syscall read/write activity"
+      description: |
+        MinIO is experiencing high syscall activity (read or write) on the system.
+        LABELS = {{ $labels }}
+
+  - alert: MinIO_Process_Running_Long
+    expr: minio_node_process_uptime_seconds > 3600 * 24 * 30
+    for: 5m
+    labels:
+      severity: low
+    annotations:
+      summary: "MinIO process has been running for over 30 days"
+      description: |
+        MinIO process uptime exceeds 30 days. Consider restarting if needed.
         LABELS = {{ $labels }}
