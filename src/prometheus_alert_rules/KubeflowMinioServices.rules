@@ -151,14 +151,3 @@ groups:
       description: |
         MinIO is experiencing high syscall activity (read or write) on the system.
         LABELS = {{ $labels }}
-
-  - alert: MinIO_Process_Running_Long
-    expr: minio_node_process_uptime_seconds > 3600 * 24 * 30
-    for: 5m
-    labels:
-      severity: low
-    annotations:
-      summary: "MinIO process has been running for over 30 days"
-      description: |
-        MinIO process uptime exceeds 30 days. Consider restarting if needed.
-        LABELS = {{ $labels }}
