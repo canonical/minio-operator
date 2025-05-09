@@ -8,50 +8,58 @@ annotated-types==0.7.0
     # via pydantic
 anyio==4.5.2
     # via httpx
-attrs==24.2.0
+attrs==25.3.0
     # via jsonschema
-certifi==2024.8.30
+certifi==2025.4.26
     # via
     #   httpcore
     #   httpx
     #   requests
-charset-normalizer==3.4.0
+charset-normalizer==3.4.2
     # via requests
-cosl==0.0.50
+cosl==0.1.0
     # via -r requirements.in
+deprecated==1.2.18
+    # via opentelemetry-api
 exceptiongroup==1.2.2
     # via anyio
-h11==0.14.0
+h11==0.16.0
     # via httpcore
-httpcore==1.0.7
+httpcore==1.0.9
     # via httpx
-httpx==0.27.2
+httpx==0.28.1
     # via lightkube
 idna==3.10
     # via
     #   anyio
     #   httpx
     #   requests
+importlib-metadata==8.5.0
+    # via
+    #   opentelemetry-api
+    #   ops
 importlib-resources==6.4.5
     # via jsonschema
 jsonschema==4.17.3
     # via serialized-data-interface
-lightkube==0.15.6
+lightkube==0.17.1
     # via cosl
-lightkube-models==1.31.1.8
+lightkube-models==1.32.0.8
     # via lightkube
 oci-image==1.0.0
     # via -r requirements.in
-ops==2.17.1
+opentelemetry-api==1.33.0
+    # via ops
+ops==2.21.1
     # via
     #   -r requirements.in
     #   cosl
     #   serialized-data-interface
 pkgutil-resolve-name==1.3.10
     # via jsonschema
-pydantic==2.10.3
+pydantic==2.10.6
     # via cosl
-pydantic-core==2.27.1
+pydantic-core==2.27.2
     # via pydantic
 pyrsistent==0.20.0
     # via jsonschema
@@ -66,12 +74,10 @@ requests==2.32.3
 serialized-data-interface==0.7.0
     # via -r requirements.in
 sniffio==1.3.1
-    # via
-    #   anyio
-    #   httpx
+    # via anyio
 tenacity==9.0.0
     # via cosl
-typing-extensions==4.12.2
+typing-extensions==4.13.2
     # via
     #   annotated-types
     #   anyio
@@ -82,5 +88,9 @@ urllib3==2.2.3
     # via requests
 websocket-client==1.8.0
     # via ops
+wrapt==1.17.2
+    # via deprecated
 zipp==3.20.2
-    # via importlib-resources
+    # via
+    #   importlib-metadata
+    #   importlib-resources
