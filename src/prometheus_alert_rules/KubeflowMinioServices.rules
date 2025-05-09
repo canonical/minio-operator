@@ -24,7 +24,7 @@ groups:
         LABELS = {{ $labels }}
 
   # Disk space
-  - alert: Disk_Space_Filling_Up
+  - alert: MinIO_Disk_Space_Filling_Up
     expr: predict_linear(minio_node_disk_used_bytes[1h], 86400) >= minio_node_disk_total_bytes
     for: 5m
     labels:
