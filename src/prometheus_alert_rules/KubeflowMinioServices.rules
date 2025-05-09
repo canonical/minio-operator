@@ -50,7 +50,7 @@ groups:
       description: "MinIO has opened the maximum number of file descriptors."
 
   - alert: MinIO_Too_Many_Open_File_Descriptors_Rate
-    expr: minio_node_file_descriptor_open_total >= minio_node_file_descriptor_limit_total
+    expr: predict_linear(minio_node_file_descriptor_open_total[5m], 86400) >= minio_node_file_descriptor_limit_total
     for: 5m
     labels:
       severity: high
