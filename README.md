@@ -1,4 +1,4 @@
-## MinIO Operator cahnged
+## MinIO Operator
 
 ### Overview
 This charm encompasses the Kubernetes operator for MinIO (see
