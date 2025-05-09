@@ -45,6 +45,12 @@
       "id": "stat",
       "name": "Stat",
       "version": ""
+    },
+    {
+      "type": "panel",
+      "id": "timeseries",
+      "name": "Time series",
+      "version": ""
     }
   ],
   "annotations": {
@@ -60,7 +66,7 @@
       }
     ]
   },
-  "description": "MinIO Grafana Dashboard - https://min.io/",
+  "description": "MinIO Grafana Dashboard - https://min.io/ - Extended with custom alert panels",
   "editable": true,
   "gnetId": 13502,
   "graphTooltip": 0,
@@ -189,6 +195,157 @@
         "y": 0
       },
       "id": 65,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "last"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum by (instance) (minio_s3_traffic_received_bytes{})",
+          "format": "table",
+          "hide": false,
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{instance}}",
+          "metric": "process_start_time_seconds",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Total S3 Traffic Inbound",
+      "type": "stat"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": "${prometheusds}",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "percentage",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "dtdurations"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 3,
+        "x": 0,
+        "y": 0
+      },
+      "id": 2,
+      "interval": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": {
+          "calcs": [
+            "mean"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "text": {},
+        "textMode": "auto"
+      },
+      "pluginVersion": "8.0.6",
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "time() - max(minio_node_process_starttime_seconds{})",
+          "format": "time_series",
+          "instant": true,
+          "interval": "",
+          "intervalFactor": 1,
+          "legendFormat": "{{instance}}",
+          "metric": "process_start_time_seconds",
+          "refId": "A",
+          "step": 60
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Uptime",
+      "type": "stat"
+    },
+    {
+      "cacheTimeout": null,
+      "datasource": "${prometheusds}",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "mappings": [
+            {
+              "options": {
+                "match": "null",
+                "result": {
+                  "text": "N/A"
+                }
+              },
+              "type": "special"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 3,
+        "x": 3,
+        "y": 0
+      },
+      "id": 3,
       "interval": null,
       "links": [],
       "maxDataPoints": 100,
@@ -2443,6 +2600,645 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "title": "MinIO Low Disk Space (< 10GB)",
+      "type": "stat",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 5, "w": 6, "x": 0, "y": 64 },
+      "id": 101,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "minio_node_disk_free_bytes{}",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "instant": true,
+          "interval": "",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": 0 },
+              { "color": "orange", "value": 10737418240 }, 
+              { "color": "green", "value": 10737418241 }
+            ]
+          },
+          "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "title": "MinIO Disk Usage (> 90%)",
+      "type": "gauge",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 5, "w": 6, "x": 6, "y": 64 },
+      "id": 102,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "(minio_node_disk_used_bytes{} / minio_node_disk_total_bytes{}) * 100",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "interval": "",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 80 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "title": "MinIO Memory Usage (> 4GB)",
+      "type": "stat",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 5, "w": 6, "x": 12, "y": 64 },
+      "id": 103,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "minio_node_process_resident_memory_bytes{}",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "instant": true,
+          "interval": "",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 3221225472 }, 
+              { "color": "red", "value": 4294967296 }    
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      }
+    },
+    {
+      "title": "MinIO Open File Descriptors (> 90%)",
+      "type": "gauge",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 5, "w": 6, "x": 18, "y": 64 },
+      "id": 104,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "(minio_node_file_descriptor_open_total{} / minio_node_file_descriptor_limit_total{}) * 100",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "interval": "",
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 80 },
+              { "color": "red", "value": 90 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      }
+    },
+    {
+      "title": "MinIO S3 Request Error Rate (> 10%)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 69 },
+      "id": 105,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "rate(minio_s3_requests_errors_total[2m]) / rate(minio_s3_requests_total[2m])",
+          "legendFormat": "{{instance}} - Error Rate",
+          "refId": "A",
+          "interval": "2m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.1 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "title": "MinIO S3 Auth Failure Rate (> 1/s)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 69 },
+      "id": 106,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "rate(minio_s3_requests_rejected_auth_total[2m])",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "interval": "2m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "title": "MinIO Invalid S3 Request Rate (> 1/s)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 69 },
+      "id": 107,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "rate(minio_s3_requests_rejected_invalid_total[2m])",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "interval": "2m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 1 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "title": "MinIO S3 Requests Waiting Rate (> 5/s)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 8, "x": 0, "y": 76 },
+      "id": 108,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "rate(minio_s3_requests_waiting_total[2m])",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "interval": "2m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 5 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "title": "MinIO CPU Usage (> 80%)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 8, "x": 8, "y": 76 },
+      "id": 109,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "rate(minio_node_process_cpu_total_seconds[2m])",
+          "legendFormat": "{{instance}} - CPU seconds/sec",
+          "refId": "A",
+          "interval": "2m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit", 
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red", "value": 0.8 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "title": "MinIO Go Routines (> 1000)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 8, "x": 16, "y": 76 },
+      "id": 110,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "minio_node_go_routine_total{}",
+          "legendFormat": "{{instance}}",
+          "refId": "A",
+          "interval": ""
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 800 },
+              { "color": "red", "value": 1000 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "title": "MinIO Syscall Read Activity (> 10k/s)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 12, "x": 0, "y": 83 },
+      "id": 111,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "rate(minio_node_syscall_read_total[2m])",
+          "legendFormat": "{{instance}} - Reads/sec",
+          "refId": "A",
+          "interval": "2m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 8000 },
+              { "color": "red", "value": 10000 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
+    },
+    {
+      "title": "MinIO Syscall Write Activity (> 10k/s)",
+      "type": "timeseries",
+      "datasource": "${prometheusds}",
+      "gridPos": { "h": 7, "w": 12, "x": 12, "y": 83 },
+      "id": 112,
+      "pluginVersion": "8.0.6",
+      "cacheTimeout": null,
+      "links": [],
+      "maxDataPoints": 100,
+      "interval": null,
+      "timeFrom": null,
+      "timeShift": null,
+      "targets": [
+        {
+          "expr": "rate(minio_node_syscall_write_total[2m])",
+          "legendFormat": "{{instance}} - Writes/sec",
+          "refId": "A",
+          "interval": "2m"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops",
+          "custom": {
+            "axisPlacement": "right",
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "gradientMode": "opacity",
+            "spanNulls": false
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 8000 },
+              { "color": "red", "value": 10000 }
+            ]
+          },
+           "mappings": [
+            {
+              "options": {"match": "null", "result": {"text": "N/A"}},
+              "type": "special"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "single", "sort": "none" }
+      }
     }
   ],
   "refresh": "10s",
@@ -2510,5 +3306,5 @@
   "timezone": "",
   "title": "MinIO Dashboard",
   "uid": "TgmJnqnnk",
-  "version": 18
+  "version": 19
 }
