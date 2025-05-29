@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 
 ops
-oci-image
-serialized-data-interface
 # from prometheus_k8s.v0.prometheus_scrape.py
 cosl
+charmed-kubeflow-chisme
+cryptography==41.0.3
