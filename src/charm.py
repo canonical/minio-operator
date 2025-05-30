@@ -181,7 +181,7 @@ class MinIOOperator(CharmBase):
         else:
             try:
                 secret = self._stored.secret_key
-                logger.debug("Using existing secret key from stored state.")
+                logger.info("Using existing secret key from stored state.")
             except AttributeError:
                 logger.debug("No secret key provided in config, generating a new one.")
                 secret = "".join(choices(ascii_uppercase + digits, k=30))
@@ -192,6 +192,7 @@ class MinIOOperator(CharmBase):
     def _get_files_to_push(self) -> Optional[List[LazyContainerFileTemplate]]:
         """
         Get the list of files to push to the MinIO container.
+        This includes SSL certificate files if configured for MinIO to use secure connections.
 
         Returns:
             List[ContainerFileTemplate]: List of files to be pushed
@@ -218,7 +219,7 @@ class MinIOOperator(CharmBase):
                     )
                 )
             return ssl_config
-        logger.debug("No SSL configuration provided, skipping file push.")
+        logger.info("No SSL configuration provided, skipping file push.")
         return None
 
 
