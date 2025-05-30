@@ -28,7 +28,7 @@ class MinIOPebbleService(PebbleServiceComponent):
         """
         try:
             inputs: MinIOInputs = self._inputs_getter()
-        except Exception as err:
+        except Exception as err:  # pragma: no cover
             raise ValueError("Failed to get inputs for Pebble container.") from err
 
         layer = Layer(
@@ -49,13 +49,20 @@ class MinIOPebbleService(PebbleServiceComponent):
                     }
                 },
                 "checks": {
-                    "minio-metrics-get": {
+                    "minio-ready": {
                         "override": "replace",
                         "period": "30s",
+                        "level": "ready",
                         "http": {
-                            "url": f"http://localhost:{inputs.MINIO_PORT}/minio/v2/metrics/cluster"
+                            "url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/ready"
                         },
-                    }
+                    },
+                    "minio-live": {
+                        "override": "replace",
+                        "period": "30s",
+                        "level": "live",
+                        "http": {"url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/live"},
+                    },
                 },
             }
         )

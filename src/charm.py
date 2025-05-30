@@ -56,7 +56,6 @@ class MinIOOperator(CharmBase):
                 name="relation:object_storage",
                 relation_name="object-storage",
                 data_to_send={
-                    "namespace": self.model.name,
                     "port": self.model.config["port"],
                     "secure": False,
                     "access-key": self.model.config["access-key"],
@@ -175,7 +174,7 @@ class MinIOOperator(CharmBase):
         if config_secret:
             if len(config_secret) < 8:
                 raise ErrorWithStatus(
-                    "The `secret-key` config value must be at least 8 characters long.",
+                    "The 'secret-key' config value must be at least 8 characters long.",
                     BlockedStatus,
                 )
             secret = config_secret
@@ -223,5 +222,5 @@ class MinIOOperator(CharmBase):
         return None
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: nocover
     main(MinIOOperator)
