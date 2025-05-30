@@ -57,10 +57,10 @@ class MinIOPebbleService(PebbleServiceComponent):
                             "url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/ready"
                         },
                     },
-                    "minio-live": {
+                    "minio-alive": {
                         "override": "replace",
                         "period": "30s",
-                        "level": "live",
+                        "level": "alive",
                         "http": {"url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/live"},
                     },
                 },
