@@ -1,6 +1,7 @@
 # Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 import json
+from pathlib import Path
 
 import pytest
 import yaml
@@ -333,6 +334,54 @@ def test_minio_console_port_args(harness):
     ]
     assert command == f"minio {' '.join(expected_args)}"
 
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "ssl-cert": "test-ssl-cert",
+            "ssl-key": "test-ssl-key",
+            "ssl-ca": "test-ssl-ca",
+        },
+        {
+            "ssl-cert": "test-ssl-cert",
+            "ssl-key": "test-ssl-key",
+        },
+        {
+            "ssl-cert": "test-ssl-cert",
+        },
+        {}
+    ]
+)
+def test_ssl_files(config, harness):
+    """Test that the charm pushes SSL files to the container."""
+    # Arrange
+    harness.set_leader(True)
+    harness.update_config(config)
+
+    # Act
+    harness.begin_with_initial_hooks()
+
+    # Assert
+    container = harness.charm.unit.get_container(CONTAINER_NAME)
+    assert container.get_service(CONTAINER_NAME).is_running()
+    filesystem_root = Path(harness.get_filesystem_root(container))
+    cert_dir = filesystem_root / "minio" / ".minio" / "certs"
+    
+    if config.get("ssl-cert") and config.get("ssl-key"):
+        assert (cert_dir / "public.crt").exists()
+        assert (cert_dir / "public.crt").stat().st_mode & 0o511 == 0o511
+        assert (cert_dir / "private.key").exists()
+        assert (cert_dir / "private.key").stat().st_mode & 0o511 == 0o511
+        assert (cert_dir / "public.crt").read_text() == config["ssl-cert"]
+        assert (cert_dir / "private.key").read_text() == config["ssl-key"]
+        if config.get("ssl-ca"):
+            assert (cert_dir / "CAs" / "root.cert").exists()
+            assert (cert_dir / "CAs" / "root.cert").stat().st_mode & 0o511 == 0o511
+            assert (cert_dir / "CAs" / "root.cert").read_text() == config["ssl-ca"]
+    else:
+        assert not (cert_dir / "public.crt").exists()
+        assert not (cert_dir / "private.key").exists()
+        assert not (cert_dir / "CAs" / "root.cert").exists()
 
 def test_prometheus_data_set(harness, mocker):
     """Test that the prometheus scrape jobs are set correctly in the relation data."""
