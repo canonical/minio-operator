@@ -1,8 +1,7 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 ops
 # from prometheus_k8s.v0.prometheus_scrape.py
 cosl
 charmed-kubeflow-chisme
-cryptography==41.0.3
