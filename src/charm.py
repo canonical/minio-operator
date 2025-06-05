@@ -197,6 +197,7 @@ class MinIOOperator(CharmBase):
         Returns:
             List[ContainerFileTemplate]: List of files to be pushed
         """
+        files: LazyContainerFileTemplate = []
         if self.model.config.get("ssl-key") and self.model.config.get("ssl-cert"):
             ssl_config = [
                 LazyContainerFileTemplate(
@@ -218,9 +219,10 @@ class MinIOOperator(CharmBase):
                         permissions=0o511,
                     )
                 )
-            return ssl_config
+            logger.info("SSL configuration provided, pushing SSL files to MinIO container.")
+            files.extend(ssl_config)
         logger.info("No SSL configuration provided, skipping file push.")
-        return None
+        return files if files else None
 
 
 if __name__ == "__main__":  # pragma: nocover
