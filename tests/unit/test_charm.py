@@ -11,11 +11,15 @@ from ops.testing import Harness
 from charm import MinIOOperator
 
 CONTAINER_NAME = "minio"
+MODEL_NAME = "minio-test"
 
 
 @pytest.fixture
-def harness() -> Harness:
-    return Harness(MinIOOperator)
+def harness():
+    harness = Harness(MinIOOperator)
+    harness.set_model_name(MODEL_NAME)
+    yield harness
+    harness.cleanup()
 
 
 def test_not_leader(harness):
@@ -109,6 +113,7 @@ def test_object_storage_relation(harness):
     assert data["secure"] is False
     assert len(secret_key) == 30
     assert data["service"] == "minio"
+    assert data["namespace"] == harness.model.name
 
 
 def test_object_storage_relation_with_manual_secret(harness):
@@ -137,6 +142,7 @@ def test_object_storage_relation_with_manual_secret(harness):
         "secret-key": "test-key",
         "secure": False,
         "service": "minio",
+        "namespace": harness.model.name,
     }
     assert harness.charm.model.unit.status == ActiveStatus("")
 

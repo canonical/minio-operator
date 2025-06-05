@@ -60,6 +60,7 @@ class MinIOOperator(CharmBase):
                     "secure": False,
                     "access-key": self.model.config["access-key"],
                     "secret-key": secret_key,
+                    "namespace": self.model.name,
                     "service": self.model.app.name,
                 },
             ),
