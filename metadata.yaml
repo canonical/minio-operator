@@ -7,13 +7,13 @@ description: |
   enables customers to build cloud-native data infrastructure for
   machine learning, analytics and application data workloads.
 docs: https://discourse.charmhub.io/t/10861
-min-juju-version: "2.9.0"
-series: [kubernetes]
+containers:
+  minio:
+    resource: minio
 resources:
-  oci-image:
+  minio:
     type: oci-image
     description: Backing OCI image
-    auto-fetch: true
     upstream-source: docker.io/charmedkubeflow/minio:ckf-1.10-b40ac43
 provides:
   object-storage:
