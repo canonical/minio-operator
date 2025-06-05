@@ -4,4 +4,4 @@
 ops
 # from prometheus_k8s.v0.prometheus_scrape.py
 cosl
-charmed-kubeflow-chisme
+charmed-kubeflow-chisme>=0.4.10

@@ -1,10 +1,9 @@
 # Copyright 2024 Canonical Ltd.
 # See LICENSE file for licensing details.
 
-# Pinning to <4.0 due to compatibility with the 3.1 controller version
-juju<4.0
+juju
 pytest
 pytest-operator
 pyyaml
 tenacity
-charmed-kubeflow-chisme>=0.4.9
+charmed-kubeflow-chisme>=0.4.10

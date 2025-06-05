@@ -93,13 +93,13 @@ def test_object_storage_relation(harness):
         {"_supported_versions": yaml.dump(["v1"])},
     )
 
-    # rel_id = harness.add_relation("object-storage", "foobar")
-    # harness.add_relation_unit(rel_id, "foobar/0")
-    # harness.update_relation_data(
-    #     rel_id,
-    #     "foobar",
-    #     {"_supported_versions": yaml.dump(["v1"])},
-    # )
+    rel_id = harness.add_relation("object-storage", "foobar")
+    harness.add_relation_unit(rel_id, "foobar/0")
+    harness.update_relation_data(
+        rel_id,
+        "foobar",
+        {"_supported_versions": yaml.dump(["v1"])},
+    )
 
     # Act
     harness.begin_with_initial_hooks()
