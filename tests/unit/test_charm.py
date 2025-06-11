@@ -14,7 +14,7 @@ CONTAINER_NAME = "minio"
 MODEL_NAME = "minio-test"
 
 
-@pytest.fixture
+@pytest.fixture()
 def harness():
     harness = Harness(MinIOOperator)
     harness.set_model_name(MODEL_NAME)
@@ -22,7 +22,16 @@ def harness():
     harness.cleanup()
 
 
-def test_not_leader(harness):
+@pytest.fixture()
+def mock_kubernetes_service_patch(mocker):
+    """Mocks the KubernetesServicePatch for the charm."""
+    mock_kubernetes_service_patch = mocker.patch(
+        "charm.KubernetesServicePatch", lambda x, y, service_name: None
+    )
+    yield mock_kubernetes_service_patch
+
+
+def test_not_leader(harness, mock_kubernetes_service_patch):
     """Test when we are not the leader."""
     harness.begin_with_initial_hooks()
     # Assert that we are not Active, and that the leadership-gate is the cause.
@@ -30,7 +39,7 @@ def test_not_leader(harness):
     assert harness.charm.model.unit.status.message.startswith("[leadership-gate]")
 
 
-def test_no_relation(harness):
+def test_no_relation(harness, mock_kubernetes_service_patch):
     """Test that the charm enters ActiveStatus if there is no relation."""
     # Arrange
     harness.set_leader(True)
@@ -44,7 +53,7 @@ def test_no_relation(harness):
     assert container.get_service(CONTAINER_NAME).is_running()
 
 
-def test_object_storage_relation_incompatible_version(harness):
+def test_object_storage_relation_incompatible_version(harness, mock_kubernetes_service_patch):
     """Test that the charm enters BlockedStatus if the object-storage relation is incompatible."""
     # Arrange
     harness.set_leader(True)
@@ -66,7 +75,7 @@ def test_object_storage_relation_incompatible_version(harness):
     )
 
 
-def test_object_storage_relation_unversioned(harness):
+def test_object_storage_relation_unversioned(harness, mock_kubernetes_service_patch):
     """Test that the charm is in WaitingStatus if the object-storage relation is unversioned."""
     # Arrange
     harness.set_leader(True)
@@ -80,7 +89,7 @@ def test_object_storage_relation_unversioned(harness):
     assert isinstance(harness.charm.model.unit.status, WaitingStatus)
 
 
-def test_object_storage_relation(harness):
+def test_object_storage_relation(harness, mock_kubernetes_service_patch):
     """Test that the object-storage relation is set up correctly."""
     # Arrange
     harness.set_leader(True)
@@ -116,7 +125,7 @@ def test_object_storage_relation(harness):
     assert data["namespace"] == harness.model.name
 
 
-def test_object_storage_relation_with_manual_secret(harness):
+def test_object_storage_relation_with_manual_secret(harness, mock_kubernetes_service_patch):
     """Test that the object-storage relation is set up correctly with a manual secret key."""
     # Arrange
     harness.set_leader(True)
@@ -147,7 +156,7 @@ def test_object_storage_relation_with_manual_secret(harness):
     assert harness.charm.model.unit.status == ActiveStatus("")
 
 
-def test_server_minio_args(harness):
+def test_server_minio_args(harness, mock_kubernetes_service_patch):
     """Test that the server minio args are set correctly."""
     # Arrange
     harness.set_leader(True)
@@ -179,7 +188,7 @@ def test_server_minio_args(harness):
     assert command == f"minio {' '.join(expected_args)}"
 
 
-def test_gateway_minio_args(harness):
+def test_gateway_minio_args(harness, mock_kubernetes_service_patch):
     """Test that the gateway minio args are set correctly."""
     # Arrange
     harness.set_leader(True)
@@ -210,7 +219,7 @@ def test_gateway_minio_args(harness):
     assert command == f"minio {' '.join(expected_args)}"
 
 
-def test_gateway_minio_missing_args(harness):
+def test_gateway_minio_missing_args(harness, mock_kubernetes_service_patch):
     """Test that charm is blocked if required args for gateway mode are missing."""
     # Arrange
     harness.set_leader(True)
@@ -231,7 +240,7 @@ def test_gateway_minio_missing_args(harness):
     )
 
 
-def test_invalid_minio_mode(harness):
+def test_invalid_minio_mode(harness, mock_kubernetes_service_patch):
     """Test that charm is blocked if an invalid minio mode is set."""
     # Arrange
     harness.set_leader(True)
@@ -252,7 +261,7 @@ def test_invalid_minio_mode(harness):
     )
 
 
-def test_invalid_secret_key_length(harness):
+def test_invalid_secret_key_length(harness, mock_kubernetes_service_patch):
     """Test that charm is blocked if the secret key length is invalid."""
     # Arrange
     harness.set_leader(True)
@@ -272,7 +281,7 @@ def test_invalid_secret_key_length(harness):
     )
 
 
-def test_gateway_minio_with_private_endpoint(harness):
+def test_gateway_minio_with_private_endpoint(harness, mock_kubernetes_service_patch):
     """Test that the gateway minio args are set correctly with a private endpoint."""
     minio_mode = "gateway"
     storage_service = "azure"
@@ -309,7 +318,7 @@ def test_gateway_minio_with_private_endpoint(harness):
     assert command == f"minio {' '.join(expected_args)}"
 
 
-def test_minio_console_port_args(harness):
+def test_minio_console_port_args(harness, mock_kubernetes_service_patch):
     """Test that the console port is set correctly in the args."""
     # Arrange
     harness.set_leader(True)
@@ -359,7 +368,7 @@ def test_minio_console_port_args(harness):
         {},
     ],
 )
-def test_ssl_files(config, harness):
+def test_ssl_files(config, harness, mock_kubernetes_service_patch):
     """Test that the charm pushes SSL files to the container."""
     # Arrange
     harness.set_leader(True)
@@ -391,7 +400,7 @@ def test_ssl_files(config, harness):
         assert not (cert_dir / "CAs" / "root.cert").exists()
 
 
-def test_prometheus_data_set(harness, mocker):
+def test_prometheus_data_set(harness, mock_kubernetes_service_patch):
     """Test that the prometheus scrape jobs are set correctly in the relation data."""
     # Arrange
     harness.set_leader(True)
