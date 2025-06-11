@@ -1,102 +1,72 @@
-# reusable workflow triggered by other actions
 name: CI
-
 on:
   workflow_call:
     secrets:
       CHARMCRAFT_CREDENTIALS:
         required: true
-
 jobs:
   lib-check:
     name: Check libraries
     uses: canonical/charmed-kubeflow-workflows/.github/workflows/_quality-checks.yaml@main
     secrets: inherit
     with:
-        charm-path: "."
-
+      charm-path: .
   lint:
-    name: Lint Code
+    name: Lint
     runs-on: ubuntu-24.04
     steps:
     - name: Check out code
-      uses: actions/checkout@v3
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v5.3.0
-      with:
-        python-version: 3.8
+      uses: actions/checkout@v4
     - name: Install dependencies
-      run: |
-        pip install tox
+      run: pip install tox
     - name: Lint code
       run: tox -vve lint
-  
+  unit:
+    name: Unit Test
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Install dependencies
+      run: pip install tox
+    - name: Run unit tests
+      run: tox -e unit
   terraform-checks:
     name: Terraform
     uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
     with:
       charm-path: .
-
-  unit:
-    name: Unit Tests
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v5.3.0
-        with:
-          python-version: 3.8
-      - name: Install dependencies
-        run: |
-          pip install tox
-      - name: Run unit tests
-        run: tox -vve unit
-
   integration:
-    name: Integration Test (deploy and access)
+    name: Integration Tests
     runs-on: ubuntu-24.04
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v5.3.0
-        with:
-          python-version: 3.8
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: microk8s
-          channel: 1.32-strict/stable
-          microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
-          charmcraft-channel: 3.x/stable
-          juju-channel: 3.6/stable
+    - name: Check out code
+      uses: actions/checkout@v4
+    - name: Setup operator environment
+      uses: charmed-kubernetes/actions-operator@main
+      with:
+        provider: microk8s
+        channel: 1.32-strict/stable
+        charmcraft-channel: 3.x/stable
+        juju-channel: 3.6/stable
+    - name: Test
+      run: tox -vve integration -- --model testing
 
-      - name: Build and test
-        run: |
-          tox -vve integration -- --model testing
-
-      # On failure, capture debugging resources
-      - name: Get all
-        run: kubectl get all -A
-        if: failure()
-
-      - name: Describe deployments
-        run: kubectl describe deployments -A
-        if: failure()
-
-      - name: Describe replicasets
-        run: kubectl describe replicasets -A
-        if: failure()
-
-      - name: Get juju status
-        run: juju status
-        if: failure()
-
-      - name: Get application logs
-        run: kubectl logs --tail 100 -n testing -ljuju-app=minio
-        if: failure()
-
-      - name: Get operator logs
-        run: kubectl logs --tail 100 -n testing -ljuju-operator=minio
-        if: failure()
+    - name: Get all
+      run: kubectl get all -A
+      if: failure()
+    - name: Describe deployments
+      run: kubectl describe deployments -A
+      if: failure()
+    - name: Describe replicasets
+      run: kubectl describe replicasets -A
+      if: failure()
+    - name: Get juju status
+      run: juju status
+      if: failure()
+    - name: Get application logs
+      run: kubectl logs -n testing --tail 1000 -ljuju-app=minio
+      if: failure()
+    - name: Get application operator logs
+      run: kubectl logs -n testing --tail 1000 -ljuju-operator=minio
+      if: failure()
