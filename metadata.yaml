@@ -1,5 +1,6 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
+
 name: minio
 summary: Kubernetes Native, High Performance Object Storage
 description: |
