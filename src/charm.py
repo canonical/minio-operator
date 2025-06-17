@@ -11,9 +11,9 @@ from string import ascii_uppercase, digits
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from oci_image import OCIImageResource, OCIImageResourceError
+from ops import main
 from ops.charm import CharmBase
 from ops.framework import StoredState
-from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 
