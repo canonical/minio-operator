@@ -16,9 +16,11 @@ from charmed_kubeflow_chisme.components import (
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
+from lightkube.models.core_v1 import ServicePort
 from ops import BlockedStatus, CharmBase, StoredState, main
 
-from components.pebble_components import MinIOInputs, MinIOPebbleService
+from components.pebble_component import MinIOInputs, MinIOPebbleService
+from components.service_component import KubernetesServicePatchComponent
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +52,18 @@ class MinIOOperator(CharmBase):
             depends_on=[],
         )
 
+        self.service_patcher = self.charm_reconciler.add(
+            component=KubernetesServicePatchComponent(
+                charm=self,
+                name="kubernetes-service-patch",
+                ports=[
+                    ServicePort(int(self.model.config["port"]), name="minio"),
+                    ServicePort(int(self.model.config["console-port"]), name="minio-console"),
+                ],
+            ),
+            depends_on=[self.leadership_gate],
+        )
+
         self.object_storage_relation = self.charm_reconciler.add(
             component=SdiRelationBroadcasterComponent(
                 charm=self,
@@ -64,7 +78,7 @@ class MinIOOperator(CharmBase):
                     "service": self.model.app.name,
                 },
             ),
-            depends_on=[self.leadership_gate],
+            depends_on=[self.leadership_gate, self.service_patcher],
         )
 
         self.minio_container = self.charm_reconciler.add(
@@ -83,6 +97,7 @@ class MinIOOperator(CharmBase):
             ),
             depends_on=[
                 self.leadership_gate,
+                self.service_patcher,
                 self.object_storage_relation,
             ],
         )
