@@ -2,9 +2,7 @@ import logging
 from typing import List
 
 from charmed_kubeflow_chisme.components import Component
-from charmed_kubeflow_chisme.exceptions import GenericCharmRuntimeError
 from lightkube import Client
-from lightkube.core.exceptions import ApiError
 from lightkube.models.core_v1 import ServicePort, ServiceSpec
 from lightkube.models.meta_v1 import ObjectMeta
 from lightkube.resources.core_v1 import Service
@@ -37,31 +35,21 @@ class KubernetesServicePatchComponent(Component):
 
     def _configure_app_leader(self, event):
         """Execute everything this Component should do at the Application level for leaders."""
-        try:
-            if self._is_patched():
-                logger.info(
-                    "Kubernetes Service %s is already patched, skipping", self._service_name
-                )
-                return
-            logger.info("Patching Kubernetes Service %s", self._service_name)
-            self._lightkube_client.patch(
-                Service, self._service_name, self._service_object, patch_type=PatchType.MERGE
-            )
-        except ApiError as e:
-            raise GenericCharmRuntimeError("Failed to patch Kubernetes Service") from e
+        logger.info("Checking if K8s Service needs to be updated.")
+        if self._is_patched():
+            logger.info("K8s Service %s is already patched, skipping", self._service_name)
+            return
+
+        logger.info("K8s Service %s is not patched, applying patch", self._service_name)
+        self._lightkube_client.patch(
+            Service, self._service_name, self._service_object, patch_type=PatchType.MERGE
+        )
 
     def get_status(self) -> StatusBase:
         """Returns the status of this Component."""
-        if not self._charm.unit.is_leader():
-            return ActiveStatus()
-
-        try:
-            if not self._is_patched():
-                return BlockedStatus("Service patch is not applied")
-        except ApiError as e:
-            raise GenericCharmRuntimeError(
-                "Failed to check Kubernetes Service patch status"
-            ) from e
+        logger.info("Checking the status of the Kubernetes Service Patch Component.")
+        if not self._is_patched():
+            return BlockedStatus("K8s Service was not patched correctly. Check logs for details.")
 
         return ActiveStatus()
 
