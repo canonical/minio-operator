@@ -1,7 +1,0 @@
-# Copyright 2025 Canonical Ltd.
-# See LICENSE file for licensing details.
-
-ops
-# from prometheus_k8s.v0.prometheus_scrape.py
-cosl
-charmed-kubeflow-chisme>=0.4.10
