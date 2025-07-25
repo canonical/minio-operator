@@ -50,6 +50,9 @@ provides:
     interface: prometheus_scrape
   grafana-dashboard:
     interface: grafana_dashboard
+requires:
+  velero-backup-config:
+    interface: velero_backup_config
 storage:
   minio-data:
     type: filesystem
