@@ -91,6 +91,10 @@ pytest-operator = "^0.38.0"
 pyyaml = "^6.0.2"
 tenacity = "^9.0.0"
 
+[tool.poetry.group.interface_tests.dependencies]
+pytest = "^8.3.4"
+pytest-interface-tester = "^3.3.1"
+
 [project]
 name = "minio-operator"
 requires-python = ">=3.12,<4.0"
