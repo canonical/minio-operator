@@ -16,7 +16,7 @@ from charmed_kubeflow_chisme.components import (
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
-from charms.velero_libs.v0.velero_backup_config import VeleroBackupRequirer, VeleroBackupSpec
+from charms.velero_libs.v0.velero_backup_config import VeleroBackupProvider, VeleroBackupSpec
 from lightkube.models.core_v1 import ServicePort
 from ops import BlockedStatus, CharmBase, StoredState, main
 
@@ -114,10 +114,11 @@ class MinIOOperator(CharmBase):
                 }
             ],
         )
-        self.velero_backup_config = VeleroBackupRequirer(
+        self.velero_backup_config = VeleroBackupProvider(
             charm=self,
             app_name=self.app.name,
             relation_name="velero-backup-config",
+            model=self.model.name,
             spec=VeleroBackupSpec(
                 include_namespaces=[self.model.name],
                 include_resources=["persistentvolumeclaims"],
