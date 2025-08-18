@@ -81,7 +81,6 @@ class MinIOOperator(CharmBase):
             depends_on=[
                 self.leadership_gate,
                 self.service_patcher,
-                self.object_storage_relation,
             ],
         )
 
