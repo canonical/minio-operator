@@ -56,7 +56,7 @@ class Operator(CharmBase):
         ]:
             self.framework.observe(event, self.main)
 
-    def main(self):
+    def main(self, event):
         try:
             self._check_leader()
 
