@@ -56,13 +56,13 @@ class Operator(CharmBase):
         ]:
             self.framework.observe(event, self.main)
 
-    def main(self, event):
+    def main(self):
         try:
             self._check_leader()
 
             interfaces = self._get_interfaces()
 
-            image_details = self._check_image_details(event)
+            image_details = self._check_image_details()
 
             minio_args = self._get_minio_args()
 
@@ -162,7 +162,7 @@ class Operator(CharmBase):
             raise CheckFailed(str(err), BlockedStatus)
         return interfaces
 
-    def _check_image_details(self, event):
+    def _check_image_details(self):
         try:
             image_details = self.image.fetch()
         except OCIImageResourceError as e:
