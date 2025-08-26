@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, PropertyMock
 
 import pytest
 import yaml
-from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import Operator
@@ -25,7 +25,7 @@ def test_not_leader(harness):
 def test_missing_image(harness):
     harness.set_leader(True)
     harness.begin_with_initial_hooks()
-    assert harness.charm.model.unit.status == BlockedStatus("Missing resource: oci-image")
+    assert harness.charm.model.unit.status == MaintenanceStatus("Missing resource: oci-image")
 
 
 def test_main_no_relation(harness):

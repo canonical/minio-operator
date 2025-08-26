@@ -61,7 +61,7 @@ class Operator(CharmBase):
 
             interfaces = self._get_interfaces()
 
-            image_details = self._check_image_details()
+            image_details = self._check_image_details(event)
 
             minio_args = self._get_minio_args()
 
@@ -161,11 +161,13 @@ class Operator(CharmBase):
             raise CheckFailed(str(err), BlockedStatus)
         return interfaces
 
-    def _check_image_details(self):
+    def _check_image_details(self, event):
         try:
             image_details = self.image.fetch()
         except OCIImageResourceError as e:
-            raise CheckFailed(f"{e.status_message}: oci-image", e.status_type)
+            self.log.error(f"Failed to fetch oci-image with: {e.status_message}, deferring..")
+            event.defer()
+            raise CheckFailed(f"{e.status_message}: oci-image", MaintenanceStatus)
         return image_details
 
     def _send_info(self, interfaces, secret_key):
