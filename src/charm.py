@@ -49,6 +49,7 @@ class Operator(CharmBase):
             self.on.config_changed,
             self.on.install,
             self.on.upgrade_charm,
+            self.on.update_status,
             self.on.leader_elected,
             self.on["object-storage"].relation_changed,
             self.on["object-storage"].relation_joined,
@@ -165,7 +166,8 @@ class Operator(CharmBase):
         try:
             image_details = self.image.fetch()
         except OCIImageResourceError as e:
-            raise CheckFailed(f"{e.status_message}: oci-image", e.status_type)
+            self.log.error(f"Failed to fetch oci-image with: {e.status_message}")
+            raise CheckFailed(f"{e.status_message}: oci-image", WaitingStatus)
         return image_details
 
     def _send_info(self, interfaces, secret_key):
