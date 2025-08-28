@@ -165,6 +165,7 @@ class Operator(CharmBase):
         try:
             image_details = self.image.fetch()
         except OCIImageResourceError as e:
+            self.log.error(f"Failed to fetch the image info: {e}")
             raise CheckFailed(f"{e.status_message}: oci-image", e.status_type)
         return image_details
 
