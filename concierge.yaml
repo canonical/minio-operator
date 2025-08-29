@@ -1,0 +1,25 @@
+juju:
+  channel: 3.6/stable
+  model-defaults:
+    logging-config: <root>=INFO; unit=DEBUG
+
+providers:
+  k8s:
+    enable: true
+    bootstrap: true
+    channel: 1.32-classic/stable
+    features:
+      local-storage:
+        enabled: true
+    bootstrap-constraints:
+      root-disk: 2G
+
+  lxd:
+    enable: true
+    bootstrap: false
+    channel: latest/stable
+
+host:
+  snaps:
+    charmcraft:
+      channel: 3.x/stable
