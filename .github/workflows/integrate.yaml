@@ -36,13 +36,15 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v4
-    - name: Setup operator environment
-      uses: charmed-kubernetes/actions-operator@main
-      with:
-        provider: microk8s
-        channel: 1.32-strict/stable
-        charmcraft-channel: 3.x/stable
-        juju-channel: 3.6/stable
+    - name: Install dependencies
+      run: pipx install tox
+
+    - name: Setup environment
+      run: |
+        sudo apt-get remove -y docker-ce docker-ce-cli containerd.io
+        sudo rm -rf /run/containerd
+        sudo snap install concierge --classic
+        sudo concierge prepare --trace
     - name: Test
       run: tox -vve integration -- --model testing
 
