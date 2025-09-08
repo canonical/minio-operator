@@ -63,6 +63,9 @@ jobs:
         uses: actions/setup-python@v5.3.0
         with:
           python-version: 3.8
+      - name: Install dependencies
+        run: |
+          pipx install tox
       - name: Setup environment
         run: |
           sudo apt-get remove -y docker-ce docker-ce-cli containerd.io
