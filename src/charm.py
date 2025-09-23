@@ -15,7 +15,11 @@ from ops.charm import CharmBase
 from ops.framework import StoredState
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
-from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
+from serialized_data_interface import (
+    NoCompatibleVersions,
+    NoVersionsListed,
+    get_interfaces,
+)
 
 
 class Operator(CharmBase):
@@ -131,6 +135,8 @@ class Operator(CharmBase):
                             for k, v in {
                                 "MINIO_ACCESS_KEY": self.model.config["access-key"],
                                 "MINIO_SECRET_KEY": secret_key,
+                                "AWS_ACCESS_KEY_ID": self.model.config["access-key"],
+                                "AWS_SECRET_ACCESS_KEY": secret_key,
                             }.items()
                         },
                     },
