@@ -131,6 +131,11 @@ class Operator(CharmBase):
                             for k, v in {
                                 "MINIO_ACCESS_KEY": self.model.config["access-key"],
                                 "MINIO_SECRET_KEY": secret_key,
+                                # Needed to ensure the Pod won't accidentally assume
+                                # other IAM credentials (relevant for gateway mode on EKS only)
+                                # https://github.com/canonical/kfp-operators/issues/785
+                                "AWS_ACCESS_KEY_ID": self.model.config["access-key"],
+                                "AWS_SECRET_ACCESS_KEY": secret_key,
                             }.items()
                         },
                     },
