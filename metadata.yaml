@@ -11,6 +11,9 @@ docs: https://discourse.charmhub.io/t/10861
 containers:
   minio:
     resource: oci-image
+    mounts:
+      - storage: minio-data
+        location: /data
 resources:
   oci-image:
     type: oci-image
@@ -55,5 +58,4 @@ provides:
 storage:
   minio-data:
     type: filesystem
-    location: /data
     minimum-size: 10G
