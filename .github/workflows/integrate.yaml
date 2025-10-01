@@ -51,11 +51,23 @@ jobs:
     - name: Get all
       run: kubectl get all -A
       if: failure()
-    - name: Describe deployments
-      run: kubectl describe deployments -A
+    - name: Describe statefulset
+      run: kubectl describe statefulsets -n testing
       if: failure()
-    - name: Describe replicasets
-      run: kubectl describe replicasets -A
+    - name: Get statefulset
+      run: kubectl get statefulsets -n testing -o yaml
+      if: failure()
+    - name: Describe Pods
+      run: kubectl describe pods -n testing
+      if: failure()
+    - name: Get Pods
+      run: kubectl get pods -n testing -o yaml
+      if: failure()
+    - name: Describe PVCs
+      run: kubectl describe pvc -n testing
+      if: failure()
+    - name: Get PVCs
+      run: kubectl get pvc -n testing -o yaml
       if: failure()
     - name: Get juju status
       run: juju status
