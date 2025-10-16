@@ -20,6 +20,7 @@ from charms.velero_libs.v0.velero_backup_config import VeleroBackupProvider, Vel
 from lightkube.models.core_v1 import ServicePort
 from ops import BlockedStatus, CharmBase, StoredState, main
 
+from components.owasp_logging import OWASPLoggerComponent
 from components.pebble_component import MinIOInputs, MinIOPebbleService
 from components.service_component import KubernetesServicePatchComponent
 
@@ -51,6 +52,10 @@ class MinIOOperator(CharmBase):
                 name="leadership-gate",
             ),
             depends_on=[],
+        )
+
+        self.owasp_logger = self.charm_reconciler.add(
+            component=OWASPLoggerComponent(charm=self, stored=self._stored)
         )
 
         self.service_patcher = self.charm_reconciler.add(
