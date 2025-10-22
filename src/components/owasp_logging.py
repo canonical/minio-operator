@@ -21,12 +21,12 @@ class OWASPLoggerComponent(Component):
             logger.info("Event is not a config-changed one. Skipping this component.")
             return
 
-        logger.info("Got a config-changed event. Will compare with previous value of secret-key")
+        logger.debug("Got a config-changed event. Will compare with previous value of secret-key")
         config_secret = self.model.config.get("secret-key")
         stored_secret = self._stored.last_secret_key_config
 
         if config_secret != stored_secret:
-            logger.info("Config value for secret-key has changed! Creating OWASP event.")
+            logger.debug("Config value for secret-key has changed! Creating OWASP event.")
             access_key = str(self.model.config.get("access-key"))
             desc = f"The secret-key for access-key '{access_key}' was changed."
             self._owasp_logger.authn_password_change(userid=access_key, description=desc)
