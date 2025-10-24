@@ -1,6 +1,7 @@
 resource "juju_application" "minio" {
   charm {
     name     = "minio"
+    base     = var.base
     channel  = var.channel
     revision = var.revision
   }
