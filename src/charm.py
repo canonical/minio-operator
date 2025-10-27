@@ -55,7 +55,8 @@ class MinIOOperator(CharmBase):
         )
 
         self.owasp_logger = self.charm_reconciler.add(
-            component=OWASPLoggerComponent(charm=self, stored=self._stored)
+            component=OWASPLoggerComponent(charm=self, stored=self._stored),
+            depends_on=[self.leadership_gate],
         )
 
         self.service_patcher = self.charm_reconciler.add(
