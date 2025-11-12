@@ -47,23 +47,7 @@ class MinIOPebbleService(PebbleServiceComponent):
                             "MINIO_ROOT_PASSWORD": inputs.MINIO_ROOT_PASSWORD,
                         },
                     }
-                },
-                "checks": {
-                    "minio-ready": {
-                        "override": "replace",
-                        "period": "30s",
-                        "level": "ready",
-                        "http": {
-                            "url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/ready"
-                        },
-                    },
-                    "minio-alive": {
-                        "override": "replace",
-                        "period": "30s",
-                        "level": "alive",
-                        "http": {"url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/live"},
-                    },
-                },
+                }
             }
         )
 
