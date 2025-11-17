@@ -3,7 +3,10 @@ import logging
 from typing import List
 
 from charmed_kubeflow_chisme.components.pebble_component import PebbleServiceComponent
-from ops.pebble import Layer
+from charmed_kubeflow_chisme.exceptions import GenericCharmRuntimeError
+from ops import ActiveStatus, StatusBase, WaitingStatus
+from ops.model import ModelError
+from ops.pebble import CheckStatus, Layer
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +23,26 @@ class MinIOInputs:
 
 class MinIOPebbleService(PebbleServiceComponent):
     """Pebble Service for MinIO Container."""
+
+    # Override method
+    def get_status(self) -> StatusBase:
+        """Returns the status of this Component."""
+        if not self.pebble_ready:
+            return WaitingStatus("Waiting for Pebble to be ready.")
+
+        try:
+            for check_name in ["minio-ready", "minio-alive"]:
+                check = self._charm.unit.get_container(self.container_name).get_check(check_name)
+                if check != CheckStatus.UP:
+                    return WaitingStatus(
+                        f"Workload failed health check {check_name}. It will be restarted."
+                    )
+        except ModelError as error:
+            raise GenericCharmRuntimeError(
+                "Failed to run health check on workload container"
+            ) from error
+
+        return ActiveStatus()
 
     def get_layer(self) -> Layer:
         """Pebble configuration layer for MinIO.
