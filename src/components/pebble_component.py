@@ -32,7 +32,11 @@ class MinIOPebbleService(PebbleServiceComponent):
 
         try:
             for check_name in ["minio-ready", "minio-alive"]:
-                check = self._charm.unit.get_container(self.container_name).get_check(check_name)
+                check = (
+                    self._charm.unit.get_container(self.container_name)
+                    .get_check(check_name)
+                    .status
+                )
                 if check != CheckStatus.UP:
                     return WaitingStatus(
                         f"Workload failed health check {check_name}. It will be restarted."
