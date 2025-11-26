@@ -90,7 +90,7 @@ class MinIOOperator(CharmBase):
                 self.service_patcher,
             ],
         )
-        
+
         self.object_storage_relation = self.charm_reconciler.add(
             component=SdiRelationBroadcasterComponent(
                 charm=self,
