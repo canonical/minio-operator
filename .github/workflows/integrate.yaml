@@ -72,6 +72,11 @@ jobs:
           sudo rm -rf /run/containerd
           sudo snap install concierge --classic
           sudo concierge prepare --trace
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 60
+        with:
+          detached: true
       - name: Test
         run: tox -vve integration -- --model testing
 
