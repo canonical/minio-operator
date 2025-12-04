@@ -57,6 +57,15 @@ jobs:
     name: Integration Test (deploy and access)
     runs-on: ubuntu-24.04
     steps:
+      - name: Maximise GH runner space
+        uses: easimon/maximize-build-space@v8
+        with:
+          root-reserve-mb: 34816
+          remove-dotnet: 'true'
+          remove-haskell: 'true'
+          remove-android: 'true'
+          remove-codeql: 'true'
+          remove-docker-images: 'true'
       - name: Check out code
         uses: actions/checkout@v4
       - name: Set up Python 3.8
@@ -72,19 +81,10 @@ jobs:
           sudo rm -rf /run/containerd
           sudo snap install concierge --classic
           sudo concierge prepare --trace
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        timeout-minutes: 60
-        with:
-          detached: true
       - name: Test
         run: tox -vve integration -- --model testing
 
       # On failure, capture debugging resources
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        if: failure() || cancelled()
-        
       - name: Get all
         run: kubectl get all -A
         if: failure()
