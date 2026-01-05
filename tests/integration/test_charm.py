@@ -10,10 +10,14 @@ from charmed_kubeflow_chisme.testing import (
     assert_alert_rules,
     assert_grafana_dashboards,
     assert_metrics_endpoint,
+    assert_security_context,
     deploy_and_assert_grafana_agent,
+    generate_container_securitycontext_map,
     get_alert_rules,
     get_grafana_dashboards,
+    get_pod_names,
 )
+from lightkube import Client
 from pytest_operator.plugin import OpsTest
 from tenacity import Retrying, stop_after_delay, wait_exponential
 
@@ -22,10 +26,18 @@ log = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 CHARM_ROOT = "."
+CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
 MINIO_CONFIG = {
     "access-key": "minio",
     "secret-key": "minio-secret-key",
 }
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> Client:
+    """Instantiate Lightkube's Kubernetes client."""
+    client = Client(field_manager=f"{APP_NAME}")
+    return client
 
 
 @pytest.mark.abort_on_fail
@@ -230,3 +242,25 @@ async def test_refresh_credentials(ops_test: OpsTest):
                 access_key=config["access-key"],
                 secret_key=config["secret-key"],
             )
+
+
+@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
+@pytest.mark.abort_on_fail
+async def test_container_security_context(
+    ops_test: OpsTest,
+    lightkube_client: Client,
+    container_name: str,
+):
+    """Test that the security context is correctly set for charms and their workloads.
+
+    Verify that all pods' and containers' specs define the expected security contexts, with
+    particular emphasis on user IDs and group IDs.
+    """
+    pod_name = get_pod_names(ops_test.model.name, APP_NAME)[0]
+    assert_security_context(
+        lightkube_client,
+        pod_name,
+        container_name,
+        CONTAINERS_SECURITY_CONTEXT_MAP,
+        ops_test.model.name,
+    )
