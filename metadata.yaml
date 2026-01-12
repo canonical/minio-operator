@@ -11,6 +11,8 @@ docs: https://discourse.charmhub.io/t/10861
 containers:
   minio:
     resource: oci-image
+    uid: 584792
+    gid: 584792
     mounts:
       - storage: minio-data
         location: /data
@@ -59,3 +61,4 @@ storage:
   minio-data:
     type: filesystem
     minimum-size: 10G
+charm-user: non-root
