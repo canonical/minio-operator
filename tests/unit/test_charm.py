@@ -10,6 +10,7 @@ from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import MinIOOperator
+from components.pebble_component import MinIOPebbleService
 from components.service_component import KubernetesServicePatchComponent
 
 CONTAINER_NAME = "minio"
@@ -53,6 +54,17 @@ def mock_kubernetes_service_patch(mocker):
     yield mock_kubernetes_service_patched
 
 
+@pytest.fixture()
+def mock_pebble_component_patched(mocker):
+    """Mock MinIOPebbleService.get_status() to always return ActiveStatus."""
+    mocker.patch.object(
+        MinIOPebbleService,
+        "get_status",
+        return_value=ActiveStatus(""),
+    )
+    yield
+
+
 def test_not_leader(harness, mock_kubernetes_service_patched):
     """Test when we are not the leader."""
     harness.begin_with_initial_hooks()
@@ -61,7 +73,7 @@ def test_not_leader(harness, mock_kubernetes_service_patched):
     assert harness.charm.model.unit.status.message.startswith("[leadership-gate]")
 
 
-def test_no_relation(harness, mock_kubernetes_service_patched):
+def test_no_relation(harness, mock_kubernetes_service_patched, mock_pebble_component_patched):
     """Test that the charm enters ActiveStatus if there is no relation."""
     # Arrange
     harness.set_leader(True)
@@ -111,7 +123,9 @@ def test_object_storage_relation_unversioned(harness, mock_kubernetes_service_pa
     assert isinstance(harness.charm.model.unit.status, WaitingStatus)
 
 
-def test_object_storage_relation(harness, mock_kubernetes_service_patched):
+def test_object_storage_relation(
+    harness, mock_kubernetes_service_patched, mock_pebble_component_patched
+):
     """Test that the object-storage relation is set up correctly."""
     # Arrange
     harness.set_leader(True)
@@ -147,7 +161,9 @@ def test_object_storage_relation(harness, mock_kubernetes_service_patched):
     assert data["namespace"] == harness.model.name
 
 
-def test_object_storage_relation_with_manual_secret(harness, mock_kubernetes_service_patched):
+def test_object_storage_relation_with_manual_secret(
+    harness, mock_kubernetes_service_patched, mock_pebble_component_patched
+):
     """Test that the object-storage relation is set up correctly with a manual secret key."""
     # Arrange
     harness.set_leader(True)
@@ -463,7 +479,9 @@ def test_service_patched(harness, mock_lightkube_client, mock_kubernetes_service
     mock_lightkube_client.patch.assert_called()
 
 
-def test_service_not_patched(harness, mock_lightkube_client, mock_kubernetes_service_patch):
+def test_service_not_patched(
+    harness, mock_lightkube_client, mock_kubernetes_service_patch, mock_pebble_component_patched
+):
     """Test that the KubernetesServicePatchComponent skip patch the service if already patched."""
     # Arrange
     harness.set_leader(True)
