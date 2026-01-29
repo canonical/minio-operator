@@ -57,6 +57,22 @@ provides:
     interface: grafana_dashboard
   velero-backup-config:
     interface: velero_backup_config
+  provide-cmr-mesh:
+    interface: cross_model_mesh
+    description: |
+      Access a cross-model application from catalogue via the service mesh.
+      This relation provides additional data required by the service mesh to enforce cross-model authorization policies.
+requires:
+  service-mesh:
+    limit: 1
+    interface: service_mesh
+    description: |
+      Subscribe this charm into a service mesh to enforce authorization policies.
+  require-cmr-mesh:
+    interface: cross_model_mesh
+    description: |
+      Allow a cross-model application access to catalogue via the service mesh.
+      This relation provides additional data required by the service mesh to enforce cross-model authorization policies.
 storage:
   minio-data:
     type: filesystem

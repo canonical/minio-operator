@@ -2,10 +2,11 @@
 # See LICENSE file for licensing details.
 import json
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from charmed_kubeflow_chisme.exceptions import GenericCharmRuntimeError
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
@@ -24,11 +25,13 @@ def harness():
     harness.cleanup()
 
 
-@pytest.fixture()
+@pytest.fixture(autouse=True)
 def mock_lightkube_client(mocker):
     """Mock lightkube Client and _is_patched()."""
     mock_client = MagicMock()
     mocker.patch("components.service_component.Client", return_value=mock_client)
+    mocker.patch("components.service_mesh_component.Client", return_value=mock_client)
+    mocker.patch("src.components.service_mesh_component.Client", return_value=mock_client)
     yield mock_client
 
 
@@ -486,3 +489,91 @@ def test_service_not_patched(harness, mock_lightkube_client, mock_kubernetes_ser
     # Assert
     mock_lightkube_client.patch.assert_not_called()
     assert harness.charm.model.unit.status == ActiveStatus()
+
+
+@pytest.mark.parametrize(
+    "relation_exists,expected_policies_count",
+    [
+        (True, 1),
+        (None, 0),
+    ],
+)
+def test_service_mesh_prm_reconcile_called(
+    harness,
+    mock_kubernetes_service_patch,
+    relation_exists,
+    expected_policies_count,
+):
+    """Test PolicyResourceManager.reconcile is called with correct policies based on relation."""
+    harness.set_leader(True)
+    harness.begin()
+
+    # Create the service mesh relation when requested
+    if relation_exists:
+        rel_id = harness.add_relation("service-mesh", "istio-beacon-k8s")
+        harness.add_relation_unit(rel_id, "istio-beacon-k8s/0")
+
+    with patch.object(
+        harness.charm.service_mesh.component._policy_resource_manager, "reconcile"
+    ) as mock_reconcile:
+        # Act
+        harness.charm.on.install.emit()
+
+        # Assert reconcile was called with the expected parameters
+        mock_reconcile.assert_called_once()
+        call_args = mock_reconcile.call_args
+        assert call_args.kwargs["policies"] == []
+        assert "mesh_type" in call_args.kwargs
+        assert "raw_policies" in call_args.kwargs
+        assert len(call_args.kwargs["raw_policies"]) == expected_policies_count
+
+
+def test_service_mesh_prm_remove_called(harness, mock_kubernetes_service_patch):
+    """Test that PolicyResourceManager.reconcile is called with empty policies on remove."""
+    harness.set_leader(True)
+    harness.begin()
+
+    with patch.object(
+        harness.charm.service_mesh.component._policy_resource_manager, "reconcile"
+    ) as mock_reconcile:
+        # Call the remove method
+        harness.charm.service_mesh.component.remove(None)
+
+        # Assert reconcile was called with empty policies
+        mock_reconcile.assert_called_once()
+        call_args = mock_reconcile.call_args
+        assert call_args.kwargs["policies"] == []
+        assert call_args.kwargs["raw_policies"] == []
+
+
+@pytest.mark.parametrize(
+    "exception_type,exception_msg",
+    [
+        (RuntimeError, "Invalid policy"),
+        (TypeError, "Invalid type"),
+    ],
+)
+def test_service_mesh_get_status_error_handling(
+    harness,
+    mock_kubernetes_service_patch,
+    exception_type,
+    exception_msg,
+):
+    """Test get_status raises GenericCharmRuntimeError on validation errors."""
+    harness.set_leader(True)
+    harness.begin()
+
+    rel_id = harness.add_relation("service-mesh", "istio-beacon-k8s")
+    harness.add_relation_unit(rel_id, "istio-beacon-k8s/0")
+
+    with patch.object(
+        harness.charm.service_mesh.component._policy_resource_manager, "_validate_raw_policies"
+    ) as mock_validate:
+        # Make validation raise the specified exception
+        mock_validate.side_effect = exception_type(exception_msg)
+
+        # Assert that get_status raises GenericCharmRuntimeError
+        with pytest.raises(GenericCharmRuntimeError) as exc_info:
+            harness.charm.service_mesh.component.get_status()
+
+        assert "Error validating raw policies" in str(exc_info.value)

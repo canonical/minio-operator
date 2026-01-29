@@ -23,6 +23,7 @@ from ops import BlockedStatus, CharmBase, StoredState, main
 from components.owasp_logging import OWASPLoggerComponent
 from components.pebble_component import MinIOInputs, MinIOPebbleService
 from components.service_component import KubernetesServicePatchComponent
+from src.components.service_mesh_component import ServiceMeshComponent
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,11 @@ class MinIOOperator(CharmBase):
                 name="leadership-gate",
             ),
             depends_on=[],
+        )
+
+        self.service_mesh = self.charm_reconciler.add(
+            component=ServiceMeshComponent(charm=self, name="service-mesh"),
+            depends_on=[self.leadership_gate],
         )
 
         self.owasp_logger = self.charm_reconciler.add(

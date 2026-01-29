@@ -33,6 +33,10 @@ jobs:
   integration:
     name: Integration Tests
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [integration, integration-ambient]
     steps:
     - name: Maximise GH runner space
       uses: easimon/maximize-build-space@v8
@@ -55,8 +59,8 @@ jobs:
         sudo rm -rf /run/containerd
         sudo snap install concierge --classic
         sudo concierge prepare --trace
-    - name: Test
-      run: tox -vve integration -- --model testing
+    - name: Run ${{ matrix.test-type }} tests
+      run: tox -vve ${{ matrix.test-type }} -- --model testing
 
     - name: Get all
       run: kubectl get all -A
