@@ -53,6 +53,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
         entity_url=built_charm_path,
         resources=resources,
         config=MINIO_CONFIG,
+        trust=True,
     )
     await ops_test.model.wait_for_idle(timeout=60 * 10)
 

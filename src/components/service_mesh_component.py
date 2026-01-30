@@ -48,7 +48,7 @@ class ServiceMeshComponent(Component):
             logger=logger,
         )
 
-        # Allow allow policy needed to allow Metacontroller to talk to the server
+        # Allow all policy to allow traffic when ambient mesh is enabled
         self._allow_all_policy = generate_allow_all_authorization_policy(
             app_name=self._charm.app.name,
             namespace=self._charm.model.name,
