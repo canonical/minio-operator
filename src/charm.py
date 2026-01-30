@@ -23,7 +23,7 @@ from ops import BlockedStatus, CharmBase, StoredState, main
 from components.owasp_logging import OWASPLoggerComponent
 from components.pebble_component import MinIOInputs, MinIOPebbleService
 from components.service_component import KubernetesServicePatchComponent
-from src.components.service_mesh_component import ServiceMeshComponent
+from components.service_mesh_component import ServiceMeshComponent
 
 logger = logging.getLogger(__name__)
 
