@@ -86,9 +86,9 @@ jobs:
     - name: Get juju status
       run: juju status
       if: failure()
-    - name: Get application logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-app=minio
+    - name: Get workload logs
+      run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=minio -c minio
       if: failure()
-    - name: Get application operator logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-operator=minio
+    - name: Get operator logs
+      run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=minio -c charm
       if: failure()
