@@ -31,7 +31,6 @@ def mock_lightkube_client(mocker):
     mock_client = MagicMock()
     mocker.patch("components.service_component.Client", return_value=mock_client)
     mocker.patch("components.service_mesh_component.Client", return_value=mock_client)
-    mocker.patch("src.components.service_mesh_component.Client", return_value=mock_client)
     yield mock_client
 
 
