@@ -33,6 +33,10 @@ jobs:
   integration:
     name: Integration Tests
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        test-type: [integration, integration-ambient]
     steps:
     - name: Maximise GH runner space
       uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
@@ -48,8 +52,8 @@ jobs:
         sudo rm -rf /run/containerd
         sudo snap install concierge --classic
         sudo concierge prepare --trace
-    - name: Test
-      run: tox -vve integration -- --model testing
+    - name: Run ${{ matrix.test-type }} tests
+      run: tox -vve ${{ matrix.test-type }} -- --model testing
 
     - name: Get all
       run: kubectl get all -A
@@ -75,9 +79,9 @@ jobs:
     - name: Get juju status
       run: juju status
       if: failure()
-    - name: Get application logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-app=minio
+    - name: Get workload logs
+      run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=minio -c minio
       if: failure()
-    - name: Get application operator logs
-      run: kubectl logs -n testing --tail 1000 -ljuju-operator=minio
+    - name: Get operator logs
+      run: kubectl logs -n testing --tail 1000 -lapp.kubernetes.io/name=minio -c charm
       if: failure()

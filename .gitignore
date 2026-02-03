@@ -9,3 +9,5 @@ __pycache__/
 venv/
 .terraform*
 *.tfstate*
+.venv/
+.vscode/
