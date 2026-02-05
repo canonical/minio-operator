@@ -11,3 +11,10 @@ output "provides" {
     velero_backup_config = "velero-backup-config"
   }
 }
+
+output "requires" {
+  value = {
+    require_cmr_mesh = "require-cmr-mesh",
+    service_mesh     = "service-mesh"
+  }
+}
