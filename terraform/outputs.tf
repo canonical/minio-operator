@@ -4,8 +4,17 @@ output "app_name" {
 
 output "provides" {
   value = {
-    object_storage    = "object-storage",
-    metrics_endpoint  = "metrics-endpoint",
-    grafana_dashboard = "grafana-dashboard"
+    grafana_dashboard    = "grafana-dashboard",
+    metrics_endpoint     = "metrics-endpoint",
+    object_storage       = "object-storage",
+    provide_cmr_mesh     = "provide-cmr-mesh",
+    velero_backup_config = "velero-backup-config"
+  }
+}
+
+output "requires" {
+  value = {
+    require_cmr_mesh = "require-cmr-mesh",
+    service_mesh     = "service-mesh"
   }
 }
