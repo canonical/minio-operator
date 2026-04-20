@@ -12,6 +12,7 @@ from charmed_kubeflow_chisme.testing import (
     assert_metrics_endpoint,
     assert_security_context,
     deploy_and_assert_grafana_agent,
+    deploy_and_integrate_service_mesh_charms,
     generate_container_securitycontext_map,
     get_alert_rules,
     get_grafana_dashboards,
@@ -52,8 +53,15 @@ async def test_build_and_deploy(ops_test: OpsTest):
         entity_url=built_charm_path,
         resources=resources,
         config=MINIO_CONFIG,
+        trust=True,
     )
     await ops_test.model.wait_for_idle(timeout=60 * 10)
+
+    await deploy_and_integrate_service_mesh_charms(
+        APP_NAME, ops_test.model, relate_to_ingress_route_endpoint=False
+    )
+
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], wait_for_active=True, timeout=60 * 10)
 
     # Deploying grafana-agent-k8s and add all relations
     await deploy_and_assert_grafana_agent(
