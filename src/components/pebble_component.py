@@ -66,7 +66,7 @@ class MinIOPebbleService(PebbleServiceComponent):
                         "summary": "minio service",
                         "command": f"minio {' '.join(inputs.MINIO_ARGS)}",
                         "startup": "enabled",
-                        "on-check-failure": {"minio-ready": "restart", "minio-alive": "restart"},
+                        "on-check-failure": {"minio-ready": "ignore", "minio-alive": "restart"},
                         "environment": {
                             # To allow public access without authentication for prometheus
                             # metrics set environment as follows.
@@ -80,7 +80,7 @@ class MinIOPebbleService(PebbleServiceComponent):
                     "minio-ready": {
                         "override": "replace",
                         "period": "5s",
-                        "threshold": "2",
+                        "threshold": "1",
                         "level": "ready",
                         "http": {
                             "url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/ready"
@@ -88,8 +88,8 @@ class MinIOPebbleService(PebbleServiceComponent):
                     },
                     "minio-alive": {
                         "override": "replace",
-                        "period": "5s",
-                        "threshold": "2",
+                        "period": "30s",
+                        "threshold": "3",
                         "level": "alive",
                         "http": {"url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/live"},
                     },
