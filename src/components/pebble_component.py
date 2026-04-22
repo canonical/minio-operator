@@ -80,7 +80,7 @@ class MinIOPebbleService(PebbleServiceComponent):
                     "minio-ready": {
                         "override": "replace",
                         "period": "5s",
-                        "threshold": "1",
+                        "threshold": 1,
                         "level": "ready",
                         "http": {
                             "url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/ready"
@@ -89,7 +89,7 @@ class MinIOPebbleService(PebbleServiceComponent):
                     "minio-alive": {
                         "override": "replace",
                         "period": "30s",
-                        "threshold": "3",
+                        "threshold": 3,
                         "level": "alive",
                         "http": {"url": f"http://localhost:{inputs.MINIO_PORT}/minio/health/live"},
                     },
