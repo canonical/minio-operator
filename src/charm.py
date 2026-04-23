@@ -71,23 +71,6 @@ class MinIOOperator(CharmBase):
             depends_on=[self.leadership_gate],
         )
 
-        self.object_storage_relation = self.charm_reconciler.add(
-            component=SdiRelationBroadcasterComponent(
-                charm=self,
-                name="relation:object_storage",
-                relation_name="object-storage",
-                data_to_send={
-                    "port": self.model.config["port"],
-                    "secure": False,
-                    "access-key": self.model.config["access-key"],
-                    "secret-key": secret_key,
-                    "namespace": self.model.name,
-                    "service": self.model.app.name,
-                },
-            ),
-            depends_on=[self.leadership_gate, self.service_patcher],
-        )
-
         self.minio_container = self.charm_reconciler.add(
             component=MinIOPebbleService(
                 charm=self,
@@ -105,8 +88,24 @@ class MinIOOperator(CharmBase):
             depends_on=[
                 self.leadership_gate,
                 self.service_patcher,
-                self.object_storage_relation,
             ],
+        )
+
+        self.object_storage_relation = self.charm_reconciler.add(
+            component=SdiRelationBroadcasterComponent(
+                charm=self,
+                name="relation:object_storage",
+                relation_name="object-storage",
+                data_to_send={
+                    "port": self.model.config["port"],
+                    "secure": False,
+                    "access-key": self.model.config["access-key"],
+                    "secret-key": secret_key,
+                    "namespace": self.model.name,
+                    "service": self.model.app.name,
+                },
+            ),
+            depends_on=[self.leadership_gate, self.service_patcher, self.minio_container],
         )
 
         self.prometheus_provider = MetricsEndpointProvider(
