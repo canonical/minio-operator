@@ -14,13 +14,13 @@ containers:
     uid: 584792
     gid: 584792
     mounts:
-      - storage: minio-data
-        location: /data
+    - storage: minio-data
+      location: /data
 resources:
   oci-image:
     type: oci-image
     description: Backing OCI image
-    upstream-source: docker.io/charmedkubeflow/minio:ckf-1.10-b40ac43
+    upstream-source: docker.io/charmedkubeflow/minio:ckf-1.10-25a3ea0
 provides:
   object-storage:
     interface: object-storage
