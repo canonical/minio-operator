@@ -51,6 +51,8 @@ provides:
           - service
     versions: [v1]
     __schema_source: https://raw.githubusercontent.com/canonical/operator-schemas/master/object-storage.yaml
+  s3-credentials:
+    interface: s3
   metrics-endpoint:
     interface: prometheus_scrape
   grafana-dashboard:

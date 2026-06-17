@@ -22,6 +22,7 @@ from ops import BlockedStatus, CharmBase, StoredState, main
 
 from components.owasp_logging import OWASPLoggerComponent
 from components.pebble_component import MinIOInputs, MinIOPebbleService
+from components.s3_provider_component import S3ProviderComponent, S3ProviderInputs
 from components.service_component import KubernetesServicePatchComponent
 from components.service_mesh_component import ServiceMeshComponent
 
@@ -114,6 +115,21 @@ class MinIOOperator(CharmBase):
             depends_on=[self.leadership_gate, self.service_patcher, self.minio_container],
         )
 
+        self.s3_provider = self.charm_reconciler.add(
+            component=S3ProviderComponent(
+                charm=self,
+                name="relation:s3_credentials",
+                relation_name="s3-credentials",
+                is_optional=True,
+                inputs_getter=lambda: S3ProviderInputs(
+                    ENDPOINT=self._get_minio_endpoint(),
+                    ACCESS_KEY=str(self.model.config["access-key"]),
+                    SECRET_KEY=secret_key,
+                ),
+            ),
+            depends_on=[self.leadership_gate, self.service_patcher, self.minio_container],
+        )
+
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
             jobs=[
@@ -139,6 +155,21 @@ class MinIOOperator(CharmBase):
         self.dashboard_provider = GrafanaDashboardProvider(self)
 
         self.charm_reconciler.install_default_event_handlers()
+
+    def _get_minio_endpoint(self) -> str:
+        """Build the in-cluster HTTP(S) URL for the MinIO service.
+
+        Returns:
+            str: Full endpoint URL, e.g. ``http://minio.my-model.svc.cluster.local:9000``
+        """
+        protocol = (
+            "https"
+            if self.model.config.get("ssl-cert") and self.model.config.get("ssl-key")
+            else "http"
+        )
+        host = f"{self.model.app.name}.{self.model.name}.svc.cluster.local"
+        port = self.model.config["port"]
+        return f"{protocol}://{host}:{port}"
 
     def _get_minio_args(self) -> List[str]:
         """
