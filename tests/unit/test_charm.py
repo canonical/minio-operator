@@ -578,6 +578,30 @@ def test_service_mesh_get_status_error_handling(
         assert "Error validating raw policies" in str(exc_info.value)
 
 
+@pytest.mark.parametrize(
+    "ssl_config,expected_protocol",
+    [
+        ({}, "http"),
+        ({"ssl-cert": "test-cert"}, "http"),
+        ({"ssl-cert": "test-cert", "ssl-key": "test-key"}, "https"),
+    ],
+)
+def test_get_minio_endpoint(
+    ssl_config, expected_protocol, harness, mock_kubernetes_service_patched
+):
+    """Test that _get_minio_endpoint returns the correct URL based on SSL config."""
+    # Arrange
+    harness.set_leader(True)
+    harness.update_config(ssl_config)
+
+    # Act
+    harness.begin()
+
+    # Assert
+    endpoint = harness.charm._get_minio_endpoint()
+    assert endpoint == f"{expected_protocol}://minio.{MODEL_NAME}.svc.cluster.local:9000"
+
+
 def test_s3_credentials_relation(harness, mock_kubernetes_service_patched):
     """Test that the s3-credentials relation is populated with the correct connection info."""
     # Arrange
