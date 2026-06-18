@@ -15,7 +15,7 @@ from object_storage import (
     S3Provider,
     StorageConnectionInfoRequestedEvent,
 )
-from ops import ActiveStatus, BlockedStatus, RelationBrokenEvent, StatusBase
+from ops import ActiveStatus, BlockedStatus, StatusBase
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +42,6 @@ class S3ProviderComponent(Component):
         *args,
         relation_name: str,
         is_optional: bool = False,
-        required_relation_fields: frozenset[str] = frozenset({"access-key", "secret-key"}),
         **kwargs,
     ):
         """Initialise the component.
@@ -50,15 +49,10 @@ class S3ProviderComponent(Component):
         Args:
             relation_name: Name of the S3 relation endpoint.
             is_optional: When True, the component is Active even if no relation is present.
-            required_relation_fields: Set of databag keys that must all be present for a
-                relation to be considered fully populated. Defaults to the standard S3
-                fields ``{"access-key", "secret-key"}``. See:
-                https://github.com/canonical/object-storage-integrator/blob/dcbe3071598e599a7874373e2c93459b14436a94/lib/object_storage/s3.py#L20-L23
         """
         super().__init__(*args, **kwargs)
         self.relation_name = relation_name
         self.is_optional = is_optional
-        self.required_relation_fields = required_relation_fields
         self.s3_provider = S3Provider(
             charm=self._charm,
             relation_name=relation_name,
@@ -93,11 +87,9 @@ class S3ProviderComponent(Component):
                 logger.warning("Relation %s not yet initialised, skipping.", relation_id)
 
     def get_status(self) -> StatusBase:
-        """Return Active if all related applications have published required data, Blocked if not.
+        """Return Active if there is at least one relation with a requirer, Blocked if not.
 
         For optional relations, Active is returned when no relation is present.
-        If any related application has not yet published all required relation fields,
-        Blocked is returned.
         """
         relations = self._charm.model.relations[self.relation_name]
 
