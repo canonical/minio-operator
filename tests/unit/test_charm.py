@@ -576,3 +576,26 @@ def test_service_mesh_get_status_error_handling(
             harness.charm.service_mesh.component.get_status()
 
         assert "Error validating raw policies" in str(exc_info.value)
+
+
+def test_s3_credentials_relation(harness, mock_kubernetes_service_patched):
+    """Test that the s3-credentials relation is populated with the correct connection info."""
+    # Arrange
+    harness.set_leader(True)
+    harness.update_config({"secret-key": "test-secret-key"})
+
+    rel_id = harness.add_relation("s3-credentials", "requirer-app")
+    harness.add_relation_unit(rel_id, "requirer-app/0")
+    # Simulate the requirer writing its schema version to initiate the protocol, see:
+    # https://github.com/canonical/object-storage-integrator/blob/54e63ec0d524b9f52644e2beeb3db0494c3749fd/lib/README.md#versioning-and-compatibility
+    harness.update_relation_data(rel_id, "requirer-app", {"version": "1"})
+
+    # Act
+    harness.begin_with_initial_hooks()
+
+    # Assert
+    assert harness.charm.model.unit.status == ActiveStatus("")
+    data = harness.get_relation_data(rel_id, "minio")
+    assert data["endpoint"] == f"http://minio.{MODEL_NAME}.svc.cluster.local:9000"
+    assert data["access-key"] == "minio"
+    assert data["secret-key"] == "test-secret-key"
