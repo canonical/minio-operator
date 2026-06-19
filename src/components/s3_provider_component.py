@@ -32,9 +32,7 @@ class S3ProviderInputs:
 class S3ProviderComponent(Component):
     """Component that manages an S3-compatible object storage relation.
 
-    ``get_data()`` returns connection info for every related application that has published
-    at least some relation data. ``get_status()`` returns Active only when all related
-    applications have published all required relation fields.
+    Publishes endpoint and credentials to related requirers using the `s3` interface.
     """
 
     def __init__(
