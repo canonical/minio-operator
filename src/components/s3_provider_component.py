@@ -9,7 +9,7 @@ See: https://github.com/canonical/object-storage-integrator/tree/main/s3
 import dataclasses
 import logging
 
-from charmed_kubeflow_chisme.components.component import Component
+from charmed_kubeflow_chisme.components import Component
 from object_storage import (
     PrematureDataAccessError,
     S3Provider,
