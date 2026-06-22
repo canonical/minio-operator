@@ -2,7 +2,7 @@
 # See LICENSE file for licensing details.
 """Component for interacting with S3-compatible object storage via the s3 interface.
 
-This component uses the provider side of the object-storage charm library.
+This component uses the S3Provider interface, provided by the object-storage-charmlib library.
 See: https://github.com/canonical/object-storage-integrator/tree/main/s3
 """
 
