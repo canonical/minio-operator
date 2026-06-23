@@ -623,3 +623,32 @@ def test_s3_credentials_relation(harness, mock_kubernetes_service_patched):
     assert data["endpoint"] == f"http://minio.{MODEL_NAME}.svc.cluster.local:9000"
     assert data["access-key"] == "minio"
     assert data["secret-key"] == "test-secret-key"
+
+
+def test_s3_credentials_relation_not_initialised(harness, mock_kubernetes_service_patched):
+    """Test that when the s3-credentials relation is present but the requirer has not yet
+    initialised the protocol, the component returns WaitingStatus and no data is written.
+
+    This also covers the PrematureDataAccessError path: _configure_unit should catch the
+    error, log a warning, and leave the relation databag empty.
+    """
+    # Arrange
+    harness.set_leader(True)
+
+    rel_id = harness.add_relation("s3-credentials", "requirer-app")
+    harness.add_relation_unit(rel_id, "requirer-app/0")
+    # Intentionally do NOT write {"version": "1"}, so is_protocol_ready() returns False
+    # and set_storage_connection_info raises PrematureDataAccessError.
+
+    # Act
+    harness.begin_with_initial_hooks()
+
+    # Assert: component status is Waiting, not Active
+    assert harness.charm.s3_provider.component.get_status() == WaitingStatus(
+        "Waiting for s3-credentials relation to be initialised"
+    )
+    # No connection info should have been written to the relation bag
+    data = harness.get_relation_data(rel_id, "minio")
+    assert "endpoint" not in data
+    assert "access-key" not in data
+    assert "secret-key" not in data

@@ -15,7 +15,7 @@ from object_storage import (
     S3Provider,
     StorageConnectionInfoRequestedEvent,
 )
-from ops import ActiveStatus, BlockedStatus, StatusBase
+from ops import ActiveStatus, BlockedStatus, StatusBase, WaitingStatus
 
 logger = logging.getLogger(__name__)
 
@@ -85,9 +85,12 @@ class S3ProviderComponent(Component):
                 logger.warning("Relation %s not yet initialised, skipping.", relation_id)
 
     def get_status(self) -> StatusBase:
-        """Return Active if there is at least one relation with a requirer, Blocked if not.
+        """Return the status of this component.
 
-        For optional relations, Active is returned when no relation is present.
+        - Blocked: no relation present and component is not optional.
+        - Active: no relation present and component is optional.
+        - Waiting: relation is present but no requirer has initialised the protocol yet.
+        - Active: at least one relation is fully initialised.
         """
         relations = self._charm.model.relations[self.relation_name]
 
@@ -95,5 +98,8 @@ class S3ProviderComponent(Component):
             if self.is_optional:
                 return ActiveStatus()
             return BlockedStatus(f"Please add the missing relation: {self.relation_name}")
+
+        if not any(self.s3_provider.is_protocol_ready(relation) for relation in relations):
+            return WaitingStatus(f"Waiting for {self.relation_name} relation to be initialised")
 
         return ActiveStatus()
