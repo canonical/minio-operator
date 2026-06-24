@@ -576,3 +576,79 @@ def test_service_mesh_get_status_error_handling(
             harness.charm.service_mesh.component.get_status()
 
         assert "Error validating raw policies" in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "ssl_config,expected_protocol",
+    [
+        ({}, "http"),
+        ({"ssl-cert": "test-cert"}, "http"),
+        ({"ssl-cert": "test-cert", "ssl-key": "test-key"}, "https"),
+    ],
+)
+def test_get_minio_endpoint(
+    ssl_config, expected_protocol, harness, mock_kubernetes_service_patched
+):
+    """Test that _get_minio_endpoint returns the correct URL based on SSL config."""
+    # Arrange
+    harness.set_leader(True)
+    harness.update_config(ssl_config)
+
+    # Act
+    harness.begin()
+
+    # Assert
+    endpoint = harness.charm._get_minio_endpoint()
+    assert endpoint == f"{expected_protocol}://minio.{MODEL_NAME}.svc.cluster.local:9000"
+
+
+def test_s3_credentials_relation(harness, mock_kubernetes_service_patched):
+    """Test that the s3-credentials relation is populated with the correct connection info."""
+    # Arrange
+    harness.set_leader(True)
+    harness.update_config({"secret-key": "test-secret-key"})
+
+    rel_id = harness.add_relation("s3-credentials", "requirer-app")
+    harness.add_relation_unit(rel_id, "requirer-app/0")
+    # Simulate the requirer writing its schema version to initiate the protocol, see:
+    # https://github.com/canonical/object-storage-integrator/blob/54e63ec0d524b9f52644e2beeb3db0494c3749fd/lib/README.md#versioning-and-compatibility
+    harness.update_relation_data(rel_id, "requirer-app", {"version": "1"})
+
+    # Act
+    harness.begin_with_initial_hooks()
+
+    # Assert
+    assert harness.charm.model.unit.status == ActiveStatus("")
+    data = harness.get_relation_data(rel_id, "minio")
+    assert data["endpoint"] == f"http://minio.{MODEL_NAME}.svc.cluster.local:9000"
+    assert data["access-key"] == "minio"
+    assert data["secret-key"] == "test-secret-key"
+
+
+def test_s3_credentials_relation_not_initialised(harness, mock_kubernetes_service_patched):
+    """Test that when the s3-credentials relation is present but the requirer has not yet
+    initialised the protocol, the component returns WaitingStatus and no data is written.
+
+    This also covers the PrematureDataAccessError path: _configure_unit should catch the
+    error, log a warning, and leave the relation databag empty.
+    """
+    # Arrange
+    harness.set_leader(True)
+
+    rel_id = harness.add_relation("s3-credentials", "requirer-app")
+    harness.add_relation_unit(rel_id, "requirer-app/0")
+    # Intentionally do NOT write {"version": "1"}, so is_protocol_ready() returns False
+    # and set_storage_connection_info raises PrematureDataAccessError.
+
+    # Act
+    harness.begin_with_initial_hooks()
+
+    # Assert: component status is Waiting, not Active
+    assert harness.charm.s3_provider.component.get_status() == WaitingStatus(
+        "Waiting for s3-credentials relation to be initialised"
+    )
+    # No connection info should have been written to the relation bag
+    data = harness.get_relation_data(rel_id, "minio")
+    assert "endpoint" not in data
+    assert "access-key" not in data
+    assert "secret-key" not in data

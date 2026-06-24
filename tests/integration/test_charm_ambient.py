@@ -73,7 +73,7 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     )
 
 
-async def test_metrics_enpoint(ops_test: OpsTest):
+async def test_metrics_endpoint(ops_test: OpsTest):
     """Test metrics_endpoints are defined in relation data bag and their accessibility.
     This function gets all the metrics_endpoints from the relation data bag, checks if
     they are available from the grafana-agent-k8s charm and finally compares them with the
