@@ -20,7 +20,7 @@ resources:
   oci-image:
     type: oci-image
     description: Backing OCI image
-    upstream-source: docker.io/charmedkubeflow/minio:ckf-1.10-25a3ea0
+    upstream-source: docker.io/charmedkubeflow/minio:ckf-1.10-41d39c1-20260901031900
 provides:
   object-storage:
     interface: object-storage
