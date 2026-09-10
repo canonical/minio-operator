@@ -45,6 +45,11 @@ class MinIOPebbleService(PebbleServiceComponent):
                             "MINIO_PROMETHEUS_AUTH_TYPE": "public",
                             "MINIO_ROOT_USER": inputs.MINIO_ROOT_USER,
                             "MINIO_ROOT_PASSWORD": inputs.MINIO_ROOT_PASSWORD,
+                            # Needed to ensure the Pod won't accidentally assume
+                            # other IAM credentials (relevant for gateway mode on EKS only)
+                            # https://github.com/canonical/kfp-operators/issues/785
+                            "AWS_ACCESS_KEY_ID": inputs.MINIO_ROOT_USER,
+                            "AWS_SECRET_ACCESS_KEY": inputs.MINIO_ROOT_PASSWORD,
                         },
                     }
                 },
