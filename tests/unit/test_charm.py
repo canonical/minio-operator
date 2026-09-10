@@ -199,6 +199,8 @@ def test_server_minio_args(harness, mock_kubernetes_service_patched):
     assert environment["MINIO_ROOT_USER"] == "minio"
     assert environment["MINIO_ROOT_PASSWORD"] == "test-key"
     assert environment["MINIO_PROMETHEUS_AUTH_TYPE"] == "public"
+    assert environment["AWS_ACCESS_KEY_ID"] == "minio"
+    assert environment["AWS_SECRET_ACCESS_KEY"] == "test-key"
 
     # Assert the command includes the console address with the specified port
     expected_args = [
