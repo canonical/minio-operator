@@ -32,6 +32,35 @@ MINIO_CONFIG = {
     "access-key": "minio",
     "secret-key": "minio-secret-key",
 }
+MINIO_CLIENT_IMAGE = "quay.io/minio/mc"
+
+
+async def run_probe_pod(ops_test: OpsTest, pod_name: str, image: str, command: tuple):
+    """Run a one-off probe Pod via kubectl, always deleting it afterwards."""
+    kubectl_cmd = (
+        "kubectl",
+        "run",
+        "-i",
+        "--restart=Never",
+        "--command",
+        f"--namespace={ops_test.model_name}",
+        pod_name,
+        f"--image={image}",
+        "--",
+        *command,
+    )
+    try:
+        return await ops_test.run(*kubectl_cmd)
+    finally:
+        await ops_test.run(
+            "kubectl",
+            "delete",
+            "pod",
+            pod_name,
+            f"--namespace={ops_test.model_name}",
+            "--ignore-not-found",
+            "--now",
+        )
 
 
 @pytest.fixture(scope="session")
@@ -135,23 +164,12 @@ async def connect_client_to_server(
         f"&& mc rb {alias}/{bucket}"
     )
 
-    kubectl_cmd = (
-        "kubectl",
-        "run",
-        "--rm",
-        "-i",
-        "--restart=Never",
-        "--command",
-        f"--namespace={ops_test.model_name}",
-        "minio-deployment-test",
-        "--image=minio/mc",
-        "--",
-        "sh",
-        "-c",
-        minio_cmd,
+    ret_code, stdout, stderr = await run_probe_pod(
+        ops_test,
+        pod_name="minio-client-test",
+        image=MINIO_CLIENT_IMAGE,
+        command=("sh", "-c", minio_cmd),
     )
-
-    ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
 
     if ret_code != 0:
         raise ConnectionError(
@@ -200,23 +218,12 @@ async def test_connect_to_console(ops_test: OpsTest):
 
     url = f"http://{service_name}.{model_name}.svc.cluster.local:{port}"
 
-    kubectl_cmd = (
-        "kubectl",
-        "run",
-        "--rm",
-        "-i",
-        "--restart=Never",
-        "--command",
-        f"--namespace={ops_test.model_name}",
-        "minio-deployment-test",
-        "--image=curlimages/curl",
-        "--",
-        "curl",
-        "-I",
-        url,
+    ret_code, stdout, stderr = await run_probe_pod(
+        ops_test,
+        pod_name="minio-console-test",
+        image="curlimages/curl",
+        command=("curl", "-I", url),
     )
-
-    ret_code, stdout, stderr = await ops_test.run(*kubectl_cmd)
 
     assert (
         ret_code == 0
